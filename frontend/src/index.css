@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/* Original Wellness Theme Color Palette */
+:root {
+  --primary-blue: #4a90e2;
+  --secondary-blue: #7bb3f0;
+  --accent-green: #5cb85c;
+  --light-blue: #e3f2fd;
+  --background-white: #ffffff;
+  --text-dark: #333333;
+  --text-gray: #666666;
+  --error-red: #d9534f;
+  --primary-hover: #357abd;
+  --matcha-green: #b7ddc6;
+  --olive-green: #8cbf7e;
+}
+
+/* Global Background */
+body {
+  background-color: var(--background-white);
+  color: var(--text-dark);
+}
+
+/* Custom Slider Styles with Wellness Theme */
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  background: linear-gradient(
+    45deg,
+    var(--primary-blue),
+    var(--secondary-blue)
+  );
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+}
+
+.slider::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  background: linear-gradient(45deg, var(--matcha-green), var(--olive-green));
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(143, 185, 150, 0.3);
+}
+
+.slider::-webkit-slider-track {
+  background: var(--light-gray);
+  border-radius: 10px;
+  height: 8px;
+}
+
+.slider::-moz-range-track {
+  background: var(--light-gray);
+  border-radius: 10px;
+  height: 8px;
+  border: none;
+}
+
+/* Custom animations and transitions */
+.wellness-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+.wellness-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(168, 140, 240, 0.2);
+}
+
+/* Solid Container with Bottom Shadow */
+.solid-container {
+  width: 100%;
+  background: #e1c5b3;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+/* Light Container for smaller elements */
+.light-container {
+  background: rgba(189, 143, 119, 0.9);
+  border-radius: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Pacifico Font */
+.pacifico-regular {
+  font-family: "Pacifico", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Hello Paris Font */
+.hello-paris-bold {
+  font-family: "Hello Paris", cursive;
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Font Utility Classes */
+.font-pacifico {
+  font-family: "Pacifico", cursive;
+}
+
+.font-inter {
+  font-family: "Inter", sans-serif;
+}
+
+.font-nunito {
+  font-family: "Nunito", sans-serif;
+}
+
+.font-rubik {
+  font-family: "Rubik", sans-serif;
+}
