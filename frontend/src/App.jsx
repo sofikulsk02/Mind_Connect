@@ -3,19 +3,17 @@ import Welcome from "./pages/Welcome";
 import OnboardingNew from "./pages/OnboardingNew";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashbord";
+import Shutter from "./pages/shutter";
 
 const App = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showShutter, setShowShutter] = useState(false);
 
   useEffect(() => {
-    // Check if user has visited before
-    const hasVisited = localStorage.getItem("hasVisited");
-    if (hasVisited) {
-      setShowWelcome(false);
-    }
+    // Always show welcome page first - removed hasVisited check
 
     // Check if user has a token
     const token = localStorage.getItem("token");
@@ -25,7 +23,6 @@ const App = () => {
     console.log("🔍 Checking authentication...");
     console.log("Token exists:", !!token);
     console.log("Onboarding completed:", onboardingCompleted);
-    console.log("Has visited before:", !!hasVisited);
 
     if (token) {
       setIsAuthenticated(true);
@@ -46,17 +43,16 @@ const App = () => {
     localStorage.removeItem("onboardingComplete");
     setIsAuthenticated(false);
     setIsOnboardingComplete(false);
-  };
-
-  const handleResetApp = () => {
-    localStorage.clear();
-    setShowWelcome(true);
-    setIsAuthenticated(false);
-    setIsOnboardingComplete(false);
-    console.log("🔄 App reset - all localStorage cleared");
+    setShowWelcome(true); // Show welcome page after logout
   };
 
   const handleLoginSuccess = () => {
+    setShowShutter(true); // Trigger shutter animation
+    // Don't set isAuthenticated immediately - wait for shutter animation
+  };
+
+  const handleShutterComplete = () => {
+    setShowShutter(false);
     setIsAuthenticated(true);
   };
 
@@ -69,31 +65,14 @@ const App = () => {
     return (
       <div className="bg-amber-400 min-h-screen flex flex-col items-center justify-center">
         <h1 className="text-3xl font-bold text-gray-800">Loading...</h1>
-        <button
-          onClick={handleResetApp}
-          className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
-        >
-          Reset App (Clear Storage)
-        </button>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen">
-      {/* Debug info - remove this later */}
-      <div className="fixed top-4 left-4 bg-white p-2 text-sm border rounded shadow z-50">
-        <div>showWelcome: {showWelcome.toString()}</div>
-        <div>isAuthenticated: {isAuthenticated.toString()}</div>
-        <div>isOnboardingComplete: {isOnboardingComplete.toString()}</div>
-        <div>isLoading: {isLoading.toString()}</div>
-        <button
-          onClick={handleResetApp}
-          className="mt-2 px-2 py-1 bg-red-500 text-white text-xs rounded"
-        >
-          Reset App
-        </button>
-      </div>
+      {/* Shutter Animation Overlay */}
+      {showShutter && <Shutter onAnimationComplete={handleShutterComplete} />}
 
       {showWelcome ? (
         <Welcome onGetStarted={handleGetStarted} />

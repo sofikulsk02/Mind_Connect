@@ -34,7 +34,7 @@ const Dashboard = ({ onLogout }) => {
       case "support":
         return <ProfessionalHelp />;
       case "settings":
-        return <Settings />;
+        return <Settings onLogout={onLogout} />;
       default:
         return <Home />;
     }
@@ -42,7 +42,7 @@ const Dashboard = ({ onLogout }) => {
 
   return (
     <div
-      className="min-h-screen bg-[#B6D9E0]"
+      className="min-h-screen bg-[#C29CE5]"
       // style={{ backgroundColor: "var(--background-white)" }}
     >
       {/* Top Navigation Bar */}

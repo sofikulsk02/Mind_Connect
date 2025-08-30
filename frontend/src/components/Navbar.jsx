@@ -55,8 +55,16 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   return (
-    <div className="shadow-sm border-b border-gray-100 bg-[#74A8A4] px-4 py-4 sticky top-0 z-50">
+    <div className="shadow-sm border-b border-gray-100 bg-[#966FC8] px-4 py-4 sticky top-0 z-50">
       <div className="flex justify-around items-center w-full">
+        {/* logo */}
+        <div>
+          <img
+            src="../../public/ChatGPT_Image_Aug_30__2025__11_28_55_PM-removebg-preview.png"
+            className="h-10 w-30"
+            alt=""
+          />
+        </div>
         {/* Navigation Tabs Section */}
         <div className="flex items-center justify-evenly gap-4 flex-1 max-w-4xl">
           {/* Primary tabs */}
@@ -65,7 +73,6 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
             { id: "journal", label: "Journal", icon: "📝" },
             { id: "community", label: "Community", icon: "👥" },
             { id: "support", label: "Professional Help", icon: "🏥" },
-            { id: "settings", label: "Settings", icon: "⚙️" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -82,12 +89,12 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
                 activeTab === tab.id
                   ? {
                       background:
-                        "linear-gradient(135deg, #335765 0%, #5A7D8A 100%)",
+                        "linear-gradient(135deg, #3F3663 0%, #5D4E7A 100%)",
                     }
                   : {
-                      backgroundColor: "white",
+                      backgroundColor: "#C29CE5",
                       color: "var(--text-dark)",
-                      borderColor: "var(--light-blue)",
+                      // borderColor: "var(--light-blue)",
                     }
 
                 // {
@@ -119,10 +126,10 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
                 ["mood", "activities", "goals", "resources"].includes(activeTab)
                   ? {
                       background:
-                        "linear-gradient(135deg, #335765 0%, #5A7D8A 100%)",
+                        "linear-gradient(135deg, #3F3663 0%, #5D4E7A 100%)",
                     }
                   : {
-                      backgroundColor: "white",
+                      backgroundColor: "#C29CE5",
                       color: "var(--text-dark)",
                       borderColor: "var(--light-blue)",
                     }
@@ -224,7 +231,7 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
           </div>
         </div>
 
-        {/* Right section - Notifications & Profile */}
+        {/* Right section - Notifications, Settings & Profile */}
         <div className="flex items-center gap-4 ml-6">
           {/* Notifications */}
           <div className="relative">
@@ -306,7 +313,6 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
               </div>
             )}
           </div>
-
           {/* Profile */}
           <div className="flex items-center space-x-3">
             <div
@@ -318,20 +324,34 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
             >
               {userName.charAt(0)}
             </div>
-            {onLogout && (
-              <button
-                onClick={onLogout}
-                className="px-3 py-2 text-sm font-bold rounded-lg transition-colors border"
-                style={{
-                  backgroundColor: "var(--light-blue)",
-                  color: "var(--text-dark)",
-                  borderColor: "var(--primary-blue)",
-                }}
-              >
-                Logout
-              </button>
-            )}
           </div>
+
+          {/* Settings */}
+          <button
+            onClick={() => {
+              setActiveTab("settings");
+            }}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border whitespace-nowrap ${
+              activeTab === "settings"
+                ? "text-white border-transparent shadow-lg"
+                : "hover:border-[var(--primary-blue)]"
+            }`}
+            style={
+              activeTab === "settings"
+                ? {
+                    background:
+                      "linear-gradient(135deg, #3F3663 0%, #5D4E7A 100%)",
+                  }
+                : {
+                    backgroundColor: "#C29CE5",
+                    color: "var(--text-dark)",
+                    borderColor: "var(--light-blue)",
+                  }
+            }
+          >
+            <span className="text-base">⚙️</span>
+            <span>Settings</span>
+          </button>
         </div>
       </div>
     </div>

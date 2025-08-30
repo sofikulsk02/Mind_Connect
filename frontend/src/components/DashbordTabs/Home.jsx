@@ -173,7 +173,7 @@ const Home = () => {
       </div>
 
       {/* AI Suggestions */}
-      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6 border border-gray-100 relative">
+      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6 relative">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           🌟 AI Suggestions for You
         </h3>
@@ -196,17 +196,17 @@ const Home = () => {
 
       {/* Mini Wellness Dashboard */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-4 border border-gray-100 text-center">
+        <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-4 text-center">
           <span className="text-2xl mb-2 block">📖</span>
           <div className="text-lg font-bold text-indigo-600">4</div>
           <p className="text-xs text-gray-600">Journals This Week</p>
         </div>
-        <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-4 border border-gray-100 text-center">
+        <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-4 text-center">
           <span className="text-2xl mb-2 block">❤️</span>
           <div className="text-lg font-bold text-green-600">Stable</div>
           <p className="text-xs text-gray-600">Mood Trend</p>
         </div>
-        <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-4 border border-gray-100 text-center">
+        <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-4 text-center">
           <span className="text-2xl mb-2 block">⭐</span>
           <div className="text-lg font-bold text-purple-600">60%</div>
           <p className="text-xs text-gray-600">Goals Progress</p>
@@ -214,7 +214,7 @@ const Home = () => {
       </div>
 
       {/* Recent Activity Snapshot */}
-      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6 border border-gray-100">
+      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Recent Activity
         </h3>
@@ -238,7 +238,7 @@ const Home = () => {
       </div>
 
       {/* Quick Action Shortcuts */}
-      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6 border border-gray-100">
+      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Quick Actions
         </h3>
@@ -262,7 +262,7 @@ const Home = () => {
       </div>
 
       {/* Community Pulse */}
-      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6 border border-gray-100">
+      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Community Pulse
         </h3>

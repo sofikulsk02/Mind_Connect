@@ -225,13 +225,17 @@ const Onboarding = ({ onOnboardingComplete }) => {
 
         <div className="space-y-3">
           <h2
-            className={`text-2xl md:text-4xl font-bold text-black ${
+            className={`text-2xl md:text-4xl font-bold ${
               question.id === "welcome" ? "pacifico-regular" : ""
             }`}
+            style={{ color: "#071F07" }}
           >
             {question.title}
           </h2>
-          <p className="text-base text-slate-700 max-w-md mx-auto">
+          <p
+            className="text-base max-w-md mx-auto"
+            style={{ color: "#2D531A" }}
+          >
             {question.subtitle}
           </p>
         </div>
@@ -241,7 +245,7 @@ const Onboarding = ({ onOnboardingComplete }) => {
           {question.type === "welcome" && (
             <div className="space-y-4">
               <div className="text-4xl">🌟</div>
-              <p className="text-red-900 text-sm">
+              <p className="text-sm" style={{ color: "#477022" }}>
                 This will only take a few minutes and will help us create a
                 personalized experience for you.
               </p>
@@ -253,7 +257,12 @@ const Onboarding = ({ onOnboardingComplete }) => {
               type="date"
               value={formData[question.field]}
               onChange={(e) => handleChange(question.field, e.target.value)}
-              className="w-full px-4 py-3 text-base border-2 border-white/50 bg-white/10 text-white rounded-xl focus:border-white focus:bg-white/20 focus:outline-none transition-colors placeholder-white/70"
+              className="w-full px-4 py-3 text-base rounded-xl focus:outline-none transition-colors"
+              style={{
+                border: "2px solid #477022",
+                backgroundColor: "rgba(110, 134, 74, 0.1)",
+                color: "#071F07",
+              }}
               required={question.required}
             />
           )}
@@ -264,7 +273,12 @@ const Onboarding = ({ onOnboardingComplete }) => {
               value={formData[question.field]}
               onChange={(e) => handleChange(question.field, e.target.value)}
               placeholder={question.placeholder}
-              className="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-colors text-center"
+              className="w-full px-4 py-3 text-base rounded-xl focus:outline-none transition-colors text-center"
+              style={{
+                border: "2px solid #477022",
+                backgroundColor: "rgba(110, 134, 74, 0.1)",
+                color: "#071F07",
+              }}
             />
           )}
 
@@ -276,9 +290,22 @@ const Onboarding = ({ onOnboardingComplete }) => {
                   onClick={() => handleChange(question.field, option)}
                   className={`w-full px-4 py-3 rounded-xl border-2 transition-all text-base ${
                     formData[question.field] === option
-                      ? "border-white bg-white/20 text-white font-medium"
-                      : "border-white/50 hover:border-white text-white/90 hover:bg-white/10"
+                      ? "font-medium"
+                      : "hover:shadow-md"
                   }`}
+                  style={
+                    formData[question.field] === option
+                      ? {
+                          border: "2px solid #2D531A",
+                          backgroundColor: "#477022",
+                          color: "white",
+                        }
+                      : {
+                          border: "2px solid #477022",
+                          backgroundColor: "rgba(110, 134, 74, 0.1)",
+                          color: "#2D531A",
+                        }
+                  }
                 >
                   {option}
                 </button>
@@ -288,8 +315,17 @@ const Onboarding = ({ onOnboardingComplete }) => {
 
           {question.type === "slider" && (
             <div className="space-y-4">
-              <div className="px-6 py-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl">
-                <div className="text-2xl font-bold text-indigo-600 mb-3">
+              <div
+                className="px-6 py-4 rounded-xl"
+                style={{
+                  backgroundColor: "rgba(110, 134, 74, 0.2)",
+                  border: "1px solid #477022",
+                }}
+              >
+                <div
+                  className="text-2xl font-bold mb-3"
+                  style={{ color: "#071F07" }}
+                >
                   {formData[question.field]}/10
                 </div>
                 <input
@@ -300,9 +336,16 @@ const Onboarding = ({ onOnboardingComplete }) => {
                   onChange={(e) =>
                     handleChange(question.field, parseInt(e.target.value))
                   }
-                  className="w-full h-3 bg-indigo-200 rounded-lg appearance-none cursor-pointer slider"
+                  className="w-full h-3 rounded-lg appearance-none cursor-pointer slider"
+                  style={{
+                    backgroundColor: "#6E864A",
+                    accentColor: "#477022",
+                  }}
                 />
-                <div className="flex justify-between text-sm text-white/80 mt-3">
+                <div
+                  className="flex justify-between text-sm mt-3"
+                  style={{ color: "#2D531A" }}
+                >
                   <span>{question.labels[0]}</span>
                   <span>{question.labels[question.labels.length - 1]}</span>
                 </div>
@@ -323,10 +366,21 @@ const Onboarding = ({ onOnboardingComplete }) => {
                     key={value}
                     onClick={() => handleMultiSelect(question.field, value)}
                     className={`p-3 rounded-xl border-2 transition-all text-left ${
-                      isSelected
-                        ? "border-white bg-white/20 text-white"
-                        : "border-white/50 hover:border-white text-white/90 hover:bg-white/10"
+                      isSelected ? "font-medium" : "hover:shadow-md"
                     }`}
+                    style={
+                      isSelected
+                        ? {
+                            border: "2px solid #2D531A",
+                            backgroundColor: "#477022",
+                            color: "white",
+                          }
+                        : {
+                            border: "2px solid #477022",
+                            backgroundColor: "rgba(110, 134, 74, 0.1)",
+                            color: "#2D531A",
+                          }
+                    }
                   >
                     <div className="flex items-center space-x-2">
                       {emoji && <span className="text-xl">{emoji}</span>}
@@ -341,7 +395,7 @@ const Onboarding = ({ onOnboardingComplete }) => {
           {question.type === "complete" && (
             <div className="space-y-4">
               <div className="text-4xl">🎉</div>
-              <p className="text-base text-white/90">
+              <p className="text-base font-bold" style={{ color: "#071F07" }}>
                 Your personalized dashboard is ready! Let's begin your wellness
                 journey.
               </p>
@@ -372,43 +426,79 @@ const Onboarding = ({ onOnboardingComplete }) => {
       </video> */}
       {/* Fallback background if video doesn't load */}
       <div
-        className="fixed top-0 left-0 w-full h-full bg-gradient-to-br bg-[#D3A790]"
-        style={{ zIndex: -2 }}
+        className="fixed top-0 left-0 w-full h-full"
+        style={{
+          zIndex: -2,
+          backgroundColor: "#6E864A",
+        }}
       ></div>
       <div className="w-full max-w-4xl mx-auto relative z-10">
         {/* Progress Bar */}
         <div className="mb-6">
           <div className="flex justify-center mb-3">
-            <div className="light-container rounded-full px-3 py-1">
-              <span className="text-xs font-medium text-white">
+            <div
+              className="rounded-full px-3 py-1"
+              style={{
+                backgroundColor: "rgba(71, 112, 34, 0.3)",
+                border: "1px solid #477022",
+              }}
+            >
+              <span
+                className="text-xs font-medium"
+                style={{ color: "#071F07" }}
+              >
                 {currentQuestion + 1} of {questions.length}
               </span>
             </div>
           </div>
-          <div className="w-full light-container rounded-full h-2">
+          <div
+            className="w-full rounded-full h-2"
+            style={{ backgroundColor: "rgba(110, 134, 74, 0.3)" }}
+          >
             <div
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+              className="h-2 rounded-full transition-all duration-500"
               style={{
                 width: `${((currentQuestion + 1) / questions.length) * 100}%`,
+                backgroundColor: "#477022",
               }}
             />
           </div>
         </div>
 
         {/* Main Card */}
-        <div className="solid-container p-6 md:p-8">
+        <div
+          className="p-6 md:p-8 rounded-2xl shadow-xl"
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            border: "1px solid #6E864A",
+          }}
+        >
           {renderQuestion()}
 
           {/* Navigation */}
-          <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-100">
+          <div
+            className="flex justify-between items-center mt-8 pt-6"
+            style={{ borderTop: "1px solid #6E864A" }}
+          >
             <button
               onClick={prevQuestion}
               disabled={currentQuestion === 0}
               className={`px-4 py-2 rounded-xl font-medium transition-all text-sm ${
-                currentQuestion === 0
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                currentQuestion === 0 ? "cursor-not-allowed" : "hover:shadow-md"
               }`}
+              style={
+                currentQuestion === 0
+                  ? {
+                      backgroundColor: "#6E864A",
+                      color: "white",
+                      opacity: 0.5,
+                    }
+                  : {
+                      backgroundColor: "rgba(110, 134, 74, 0.2)",
+                      color: "#2D531A",
+                      border: "1px solid #477022",
+                    }
+              }
             >
               Previous
             </button>
@@ -417,13 +507,15 @@ const Onboarding = ({ onOnboardingComplete }) => {
               {questions.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentQuestion
-                      ? "bg-indigo-500"
-                      : index < currentQuestion
-                      ? "bg-green-500"
-                      : "bg-gray-200"
-                  }`}
+                  className={`w-2 h-2 rounded-full transition-colors`}
+                  style={{
+                    backgroundColor:
+                      index === currentQuestion
+                        ? "#477022"
+                        : index < currentQuestion
+                        ? "#6E864A"
+                        : "rgba(110, 134, 74, 0.4)",
+                  }}
                 />
               ))}
             </div>
@@ -435,7 +527,10 @@ const Onboarding = ({ onOnboardingComplete }) => {
                   questions[currentQuestion].required &&
                   !formData[questions[currentQuestion].field]
                 }
-                className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium text-sm hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 text-white rounded-xl font-medium text-sm transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl"
+                style={{
+                  backgroundColor: "#477022",
+                }}
               >
                 {questions[currentQuestion].type === "welcome"
                   ? "Let's Start"
@@ -445,7 +540,10 @@ const Onboarding = ({ onOnboardingComplete }) => {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium text-sm hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg disabled:opacity-50"
+                className="px-6 py-2 text-white rounded-xl font-medium text-sm transition-all shadow-lg disabled:opacity-50 hover:shadow-xl"
+                style={{
+                  backgroundColor: "#2D531A",
+                }}
               >
                 {isSubmitting ? "Completing..." : "Enter Dashboard"}
               </button>

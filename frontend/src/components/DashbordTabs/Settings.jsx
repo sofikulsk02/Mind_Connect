@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const Settings = () => {
+const Settings = ({ onLogout }) => {
   const [settings, setSettings] = useState({
     // Profile Settings
     name: "John Doe",
@@ -645,6 +645,28 @@ const Settings = () => {
               </div>
             </div>
           )}
+
+          {/* Logout Section */}
+          <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium text-red-800 mb-2">
+                  🚪 Sign Out
+                </h3>
+                <p className="text-red-600 text-sm">
+                  Sign out of your MindConnect account
+                </p>
+              </div>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium"
+                >
+                  Logout
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

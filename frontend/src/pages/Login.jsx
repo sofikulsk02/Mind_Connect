@@ -3,10 +3,12 @@ import axios from "axios";
 
 const Login = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({
+    fullName: "",
     email: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   // & alert for debuging
   const showToast = (title, status, description = "") => {
@@ -56,21 +58,40 @@ const Login = ({ onLoginSuccess }) => {
   };
 
   const handleRegister = async () => {
+    // Validate that all required fields are filled for registration
+    if (!formData.fullName || !formData.email || !formData.password) {
+      showToast(
+        "Registration failed",
+        "error",
+        "Please fill in all fields (name, email, and password)"
+      );
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const res = await axios.post(
-        "http://localhost:3000/api/auth/register",
-        formData
-      );
+      const res = await axios.post("http://localhost:3000/api/auth/register", {
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+      });
 
       showToast(
         "Registration successful!",
         "success",
-        "Please login with your credentials."
+        "Account created! You can now login with your credentials."
       );
 
       console.log("Registration successful:", res.data);
+
+      // Clear the form and switch back to login mode
+      setFormData({
+        fullName: "",
+        email: formData.email, // Keep email for convenience
+        password: "",
+      });
+      setIsRegistering(false); // Switch back to login mode
     } catch (err) {
       console.error("Registration error:", err);
       showToast(
@@ -87,8 +108,7 @@ const Login = ({ onLoginSuccess }) => {
     <div
       className="min-h-screen flex items-center justify-center p-6"
       style={{
-        background:
-          "linear-gradient(135deg, #ADE8F4 0%, #90E0EF 50%, #00B4D8 100%)",
+        backgroundColor: "#A8D480",
       }}
     >
       <div className="w-full max-w-md">
@@ -98,35 +118,61 @@ const Login = ({ onLoginSuccess }) => {
           <div className="text-center mb-8">
             <h1
               className="text-4xl font-bold mb-2 font-pacifico"
-              style={{ color: "#00B4D8" }}
+              style={{ color: "#2D5016" }}
             >
-              Welcome Back
+              {isRegistering ? "Join MindConnect" : "Welcome Back"}
             </h1>
-            <p className="text-gray-600 font-inter text-lg">
-              Your wellness journey continues here
+            <p className="text-gray-700 font-inter text-lg">
+              {isRegistering
+                ? "Start your wellness journey today"
+                : "Your wellness journey continues here"}
             </p>
           </div>
 
           {/* Info Banner */}
           <div
             className="mb-6 p-4 rounded-2xl border-2 border-opacity-30"
-            style={{ backgroundColor: "#ADE8F4", borderColor: "#00B4D8" }}
+            style={{ backgroundColor: "#DFDDD1", borderColor: "#799852" }}
           >
             <p
               className="text-center font-nunito text-sm font-medium"
-              style={{ color: "#00B4D8" }}
+              style={{ color: "#2D5016" }}
             >
-              ✨ Please login or create an account to access your personalized
-              wellness dashboard
+              ✨{" "}
+              {isRegistering
+                ? "Create your account to access personalized wellness tools"
+                : "Please login to access your personalized wellness dashboard"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Name Field - Only show when registering */}
+            {isRegistering && (
+              <div className="space-y-2">
+                <label
+                  className="block text-sm font-semibold font-inter mb-2"
+                  style={{ color: "#2D5016" }}
+                >
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  placeholder="Enter your full name"
+                  required
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-opacity-30 font-inter text-gray-700 placeholder-gray-500 transition-all duration-300 focus:outline-none focus:ring-0 focus:border-opacity-80 focus:shadow-lg bg-white/70"
+                  style={{ borderColor: "#799852" }}
+                />
+              </div>
+            )}
+
             {/* Email Field */}
             <div className="space-y-2">
               <label
                 className="block text-sm font-semibold font-inter mb-2"
-                style={{ color: "#00B4D8" }}
+                style={{ color: "#2D5016" }}
               >
                 Email Address
               </label>
@@ -137,8 +183,8 @@ const Login = ({ onLoginSuccess }) => {
                 onChange={handleChange}
                 placeholder="Enter your email"
                 required
-                className="w-full px-4 py-3 rounded-2xl border-2 border-opacity-30 font-inter text-gray-700 placeholder-gray-400 transition-all duration-300 focus:outline-none focus:ring-0 focus:border-opacity-80 focus:shadow-lg bg-white/70"
-                style={{ borderColor: "#90E0EF" }}
+                className="w-full px-4 py-3 rounded-2xl border-2 border-opacity-30 font-inter text-gray-700 placeholder-gray-500 transition-all duration-300 focus:outline-none focus:ring-0 focus:border-opacity-80 focus:shadow-lg bg-white/70"
+                style={{ borderColor: "#799852" }}
               />
             </div>
 
@@ -146,7 +192,7 @@ const Login = ({ onLoginSuccess }) => {
             <div className="space-y-2">
               <label
                 className="block text-sm font-semibold font-inter mb-2"
-                style={{ color: "#00B4D8" }}
+                style={{ color: "#2D5016" }}
               >
                 Password
               </label>
@@ -157,59 +203,106 @@ const Login = ({ onLoginSuccess }) => {
                 onChange={handleChange}
                 placeholder="Enter your password"
                 required
-                className="w-full px-4 py-3 rounded-2xl border-2 border-opacity-30 font-inter text-gray-700 placeholder-gray-400 transition-all duration-300 focus:outline-none focus:ring-0 focus:border-opacity-80 focus:shadow-lg bg-white/70"
-                style={{ borderColor: "#90E0EF" }}
+                className="w-full px-4 py-3 rounded-2xl border-2 border-opacity-30 font-inter text-gray-700 placeholder-gray-500 transition-all duration-300 focus:outline-none focus:ring-0 focus:border-opacity-80 focus:shadow-lg bg-white/70"
+                style={{ borderColor: "#799852" }}
               />
             </div>
 
             {/* Buttons */}
             <div className="space-y-4 pt-4">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 px-6 rounded-2xl font-semibold font-inter text-white text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #00B4D8 0%, #0077B6 100%)",
-                  boxShadow: "0 8px 25px rgba(0, 180, 216, 0.3)",
-                }}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Signing in...</span>
-                  </div>
-                ) : (
-                  "Sign In"
-                )}
-              </button>
+              {!isRegistering ? (
+                <>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full py-3 px-6 rounded-2xl font-semibold font-inter text-white text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #799852 0%, #5D7A3F 100%)",
+                      boxShadow: "0 8px 25px rgba(121, 152, 82, 0.3)",
+                    }}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Signing in...</span>
+                      </div>
+                    ) : (
+                      "Sign In"
+                    )}
+                  </button>
 
-              <div className="text-center">
-                <span className="text-gray-500 font-inter text-sm">
-                  Don't have an account?
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleRegister}
-                disabled={isLoading}
-                className="w-full py-3 px-6 rounded-2xl font-semibold font-inter text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border-2 bg-white/80"
-                style={{
-                  color: "#00B4D8",
-                  borderColor: "#00B4D8",
-                  boxShadow: "0 4px 15px rgba(0, 180, 216, 0.2)",
-                }}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    <span>Creating account...</span>
+                  <div className="text-center">
+                    <span className="text-gray-500 font-inter text-sm">
+                      Don't have an account?
+                    </span>
                   </div>
-                ) : (
-                  "Create New Account"
-                )}
-              </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsRegistering(true)}
+                    disabled={isLoading}
+                    className="w-full py-3 px-6 rounded-2xl font-semibold font-inter text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border-2 bg-white/80"
+                    style={{
+                      color: "#2D5016",
+                      borderColor: "#799852",
+                      boxShadow: "0 4px 15px rgba(121, 152, 82, 0.2)",
+                    }}
+                  >
+                    Create New Account
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleRegister}
+                    disabled={isLoading}
+                    className="w-full py-3 px-6 rounded-2xl font-semibold font-inter text-white text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #799852 0%, #5D7A3F 100%)",
+                      boxShadow: "0 8px 25px rgba(121, 152, 82, 0.3)",
+                    }}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Creating account...</span>
+                      </div>
+                    ) : (
+                      "Create Account"
+                    )}
+                  </button>
+
+                  <div className="text-center">
+                    <span className="text-gray-500 font-inter text-sm">
+                      Already have an account?
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsRegistering(false);
+                      setFormData({
+                        fullName: "",
+                        email: formData.email,
+                        password: "",
+                      });
+                    }}
+                    disabled={isLoading}
+                    className="w-full py-3 px-6 rounded-2xl font-semibold font-inter text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none border-2 bg-white/80"
+                    style={{
+                      color: "#2D5016",
+                      borderColor: "#799852",
+                      boxShadow: "0 4px 15px rgba(121, 152, 82, 0.2)",
+                    }}
+                  >
+                    Back to Sign In
+                  </button>
+                </>
+              )}
             </div>
           </form>
 

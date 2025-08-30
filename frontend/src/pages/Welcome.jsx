@@ -6,6 +6,8 @@ const Welcome = ({ onGetStarted }) => {
   const containerRef = useRef(null);
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
+  const leftImageRef = useRef(null);
+  const rightImageRef = useRef(null);
 
   useEffect(() => {
     console.log("Welcome component mounted");
@@ -16,6 +18,24 @@ const Welcome = ({ onGetStarted }) => {
         containerRef.current,
         { opacity: 0 },
         { opacity: 1, duration: 1, ease: "power2.out" }
+      );
+    }
+
+    // Animate left image from left
+    if (leftImageRef.current) {
+      gsap.fromTo(
+        leftImageRef.current,
+        { x: -200, opacity: 0 },
+        { x: 0, opacity: 1, duration: 1.2, delay: 0.2, ease: "power2.out" }
+      );
+    }
+
+    // Animate right image from right
+    if (rightImageRef.current) {
+      gsap.fromTo(
+        rightImageRef.current,
+        { x: 200, opacity: 0 },
+        { x: 0, opacity: 1, duration: 1.2, delay: 0.2, ease: "power2.out" }
       );
     }
 
@@ -57,9 +77,16 @@ const Welcome = ({ onGetStarted }) => {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen flex flex-col items-center justify-center p-6"
-      style={{ backgroundColor: "#BFC4B9" }}
+      className="min-h-screen flex  items-center justify-center p-6 relative overflow-hidden"
+      style={{ backgroundColor: "#799852" }}
     >
+      <div ref={leftImageRef}>
+        <img
+          src="/ca1cfbdfec8fc824daee1bdb0e9493c3.png"
+          className="h-110 w-50 ml-50"
+          alt=""
+        />
+      </div>
       {/* Main Content Container */}
       <div className="text-center max-w-4xl mx-auto">
         {/* Welcome Text */}
@@ -68,15 +95,15 @@ const Welcome = ({ onGetStarted }) => {
           className="hello-paris-bold text-5xl md:text-7xl lg:text-8xl text-black mb-8"
           style={{ opacity: 0 }}
         >
-          Welcome to MindConnect
+          Welcome To MindConnect
         </h1>
 
         {/* Subtitle */}
         <div className="mb-12">
           <p
             ref={subtitleRef}
-            className="text-xl md:text-2xl text-black/80 font-medium"
-            style={{ opacity: 0 }}
+            className="text-xl md:text-2xl text-black font-dancing-script font-bold"
+            style={{ opacity: 100 }}
           >
             Your journey to mental wellness begins here
           </p>
@@ -96,22 +123,14 @@ const Welcome = ({ onGetStarted }) => {
         </button>
 
         {/* Decorative Elements */}
-        <div className="mt-16 flex justify-center space-x-8 opacity-60">
-          <div className="w-2 h-2 bg-black rounded-full animate-pulse"></div>
-          <div
-            className="w-2 h-2 bg-black rounded-full animate-pulse"
-            style={{ animationDelay: "0.5s" }}
-          ></div>
-          <div
-            className="w-2 h-2 bg-black rounded-full animate-pulse"
-            style={{ animationDelay: "1s" }}
-          ></div>
-        </div>
-
-        {/* Debug info */}
-        <div className="mt-8 text-sm text-black/50">
-          Welcome page loaded successfully
-        </div>
+      </div>
+      {/* the toodle */}
+      <div ref={rightImageRef}>
+        <img
+          src="/bdd555dfccf00c7112fd78296fcc1ef3.png"
+          className="h-110 w-50 mr-40"
+          alt=""
+        />
       </div>
     </div>
   );
