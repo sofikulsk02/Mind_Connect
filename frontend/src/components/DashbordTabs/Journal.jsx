@@ -46,16 +46,16 @@ const Journal = () => {
       accent: "text-orange-600",
     },
     calm: {
-      bg: "bg-gradient-to-br from-blue-50 to-indigo-50",
-      accent: "text-blue-600",
+      bg: "bg-gradient-to-br from-[#90e0ef]/10 to-[#ade8f4]/10",
+      accent: "text-[#0077b6]",
     },
     energetic: {
       bg: "bg-gradient-to-br from-pink-50 to-red-50",
       accent: "text-pink-600",
     },
     contemplative: {
-      bg: "bg-gradient-to-br from-purple-50 to-indigo-50",
-      accent: "text-purple-600",
+      bg: "bg-gradient-to-br from-[#00b4d8]/10 to-[#0077b6]/10",
+      accent: "text-[#0077b6]",
     },
     peaceful: {
       bg: "bg-gradient-to-br from-green-50 to-teal-50",
@@ -232,7 +232,7 @@ const Journal = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100 wellness-transition wellness-hover">
             <div className="text-2xl mb-2">📝</div>
-            <div className="text-2xl font-bold" style={{ color: "#A88CF0" }}>
+            <div className="text-2xl font-bold" style={{ color: "#0077b6" }}>
               {entries.length}
             </div>
             <div className="text-sm text-[#666666]">Total Stories</div>
@@ -246,7 +246,9 @@ const Journal = () => {
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100">
             <div className="text-2xl mb-2">💭</div>
-            <div className="text-2xl font-bold text-purple-600">1,234</div>
+            <div className="text-2xl font-bold" style={{ color: "#91B500" }}>
+              1,234
+            </div>
             <div className="text-sm text-gray-600">Words Written</div>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100">
@@ -285,7 +287,11 @@ const Journal = () => {
                       {entry.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs"
+                          className="px-2 py-1 rounded-full text-xs"
+                          style={{
+                            backgroundColor: "rgba(145, 181, 0, 0.1)",
+                            color: "#91B500",
+                          }}
                         >
                           {tag}
                         </span>
@@ -441,7 +447,10 @@ const Journal = () => {
                     >
                       Save Your Story
                     </button>
-                    <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                    <button
+                      className="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
+                      style={{ backgroundColor: "#0077b6" }}
+                    >
                       Make It Public
                     </button>
                   </div>
@@ -467,7 +476,7 @@ const Journal = () => {
                   <select
                     value={fontFamily}
                     onChange={(e) => setFontFamily(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0077b6] focus:border-[#0077b6]"
                   >
                     {fontOptions.map((font) => (
                       <option key={font.value} value={font.value}>
@@ -535,12 +544,17 @@ const Journal = () => {
                     {selectedTags.map((tag) => (
                       <span
                         key={tag}
-                        className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs flex items-center"
+                        className="px-2 py-1 rounded-full text-xs flex items-center"
+                        style={{
+                          backgroundColor: "rgba(145, 181, 0, 0.1)",
+                          color: "#91B500",
+                        }}
                       >
                         {tag}
                         <button
                           onClick={() => toggleTag(tag)}
-                          className="ml-1 text-indigo-500 hover:text-indigo-700"
+                          className="ml-1 hover:opacity-70"
+                          style={{ color: "#91B500" }}
                         >
                           ×
                         </button>
@@ -570,7 +584,7 @@ const Journal = () => {
                   </label>
                   <div
                     onClick={() => setCoverImage("placeholder")}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-indigo-400 transition-colors"
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-[#0077b6] transition-colors"
                   >
                     {coverImage ? (
                       <div className="text-green-600">✓ Image uploaded</div>
@@ -607,7 +621,7 @@ const Journal = () => {
                         onClick={() => setSelectedMood(mood)}
                         className={`p-2 rounded-lg text-xs capitalize transition-all ${
                           selectedMood === mood
-                            ? "ring-2 ring-indigo-400 " + theme.bg
+                            ? "ring-2 ring-[#0077b6] " + theme.bg
                             : theme.bg + " hover:ring-1 hover:ring-gray-300"
                         }`}
                       >
@@ -633,9 +647,10 @@ const Journal = () => {
                         onClick={() => setAiMode(mode)}
                         className={`flex-1 py-2 px-3 rounded-md text-xs font-medium capitalize transition-colors ${
                           aiMode === mode
-                            ? "bg-white text-indigo-600 shadow-sm"
+                            ? "bg-white shadow-sm"
                             : "text-gray-600 hover:text-gray-800"
                         }`}
+                        style={aiMode === mode ? { color: "#91B500" } : {}}
                       >
                         {mode}
                       </button>
@@ -657,8 +672,20 @@ const Journal = () => {
                       </div>
                     ))}
                   {isAiThinking && (
-                    <div className="bg-indigo-50 p-3 rounded-lg text-sm text-indigo-600 flex items-center">
-                      <div className="animate-spin w-4 h-4 border-2 border-indigo-200 border-t-indigo-600 rounded-full mr-2"></div>
+                    <div
+                      className="p-3 rounded-lg text-sm flex items-center"
+                      style={{
+                        backgroundColor: "rgba(145, 181, 0, 0.1)",
+                        color: "#91B500",
+                      }}
+                    >
+                      <div
+                        className="animate-spin w-4 h-4 border-2 rounded-full mr-2"
+                        style={{
+                          borderColor: "rgba(145, 181, 0, 0.3)",
+                          borderTopColor: "#91B500",
+                        }}
+                      ></div>
                       AI is thinking...
                     </div>
                   )}
@@ -669,7 +696,8 @@ const Journal = () => {
                   <button
                     onClick={() => triggerAiSuggestion(aiMode)}
                     disabled={isAiThinking}
-                    className="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50"
+                    className="w-full py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm disabled:opacity-50"
+                    style={{ backgroundColor: "#91B500" }}
                   >
                     Get{" "}
                     {aiMode === "suggestions"

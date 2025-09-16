@@ -42,7 +42,7 @@ const Dashboard = ({ onLogout }) => {
 
   return (
     <div
-      className="min-h-screen bg-[#C29CE5]"
+      className="min-h-screen bg-[#90E0EF]"
       // style={{ backgroundColor: "var(--background-white)" }}
     >
       {/* Top Navigation Bar */}

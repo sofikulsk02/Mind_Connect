@@ -73,3 +73,5 @@ $RECYCLE.BIN/
 
 # VS Code workspace files (but keep settings)
 *.code-workspace
+
+.early.coverage

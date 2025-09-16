@@ -3,7 +3,7 @@ import Welcome from "./pages/Welcome";
 import OnboardingNew from "./pages/OnboardingNew";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashbord";
-import Shutter from "./pages/shutter";
+import Shutter from "./pages/Shutter";
 
 const App = () => {
   const [showWelcome, setShowWelcome] = useState(true);

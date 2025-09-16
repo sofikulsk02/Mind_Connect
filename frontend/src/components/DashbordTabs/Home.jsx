@@ -5,6 +5,51 @@ const Home = () => {
   const [energyLevel, setEnergyLevel] = useState(null);
   const [userName] = useState("Alex"); // This would come from user context
 
+  // Function to get time-based greeting
+  const getTimeBasedGreeting = () => {
+    const currentHour = new Date().getHours();
+
+    if (currentHour >= 5 && currentHour < 12) {
+      return {
+        greeting: "Good Morning",
+        emoji: "🌅",
+        message: "Ready to start your day mindfully?",
+        background: "from-[#caf0f8] via-[#ade8f4] to-[#90e0ef]", // Light blue morning
+        textColor: "#0077b6",
+        subTextColor: "#0096c7",
+      };
+    } else if (currentHour >= 12 && currentHour < 17) {
+      return {
+        greeting: "Good Afternoon",
+        emoji: "☀️",
+        message: "How's your day going so far?",
+        background: "from-[#90e0ef] via-[#48cae4] to-[#00b4d8]", // Bright blue afternoon
+        textColor: "#0077b6",
+        subTextColor: "#0096c7",
+      };
+    } else if (currentHour >= 17 && currentHour < 21) {
+      return {
+        greeting: "Good Evening",
+        emoji: "🌆",
+        message: "Time to unwind and reflect",
+        background: "from-[#00b4d8] via-[#0096c7] to-[#0077b6]", // Deeper blue evening
+        textColor: "white",
+        subTextColor: "#90e0ef",
+      };
+    } else {
+      return {
+        greeting: "Good Night",
+        emoji: "🌙",
+        message: "Hope you're taking care of yourself",
+        background: "from-[#0077b6] via-[#003d5c] to-[#001a2e]", // Dark blue/black night
+        textColor: "white",
+        subTextColor: "#48cae4",
+      };
+    }
+  };
+
+  const timeGreeting = getTimeBasedGreeting();
+
   const quickMoodOptions = [
     { emoji: "🙂", label: "Good", value: "good" },
     { emoji: "😔", label: "Down", value: "down" },
@@ -54,19 +99,19 @@ const Home = () => {
     {
       title: "Write Journal",
       icon: "✍️",
-      color: "from-purple-400 to-purple-600",
+      color: "from-[#0077b6] to-[#00b4d8]",
       action: "journal",
     },
     {
       title: "Track Mood",
       icon: "📊",
-      color: "from-cyan-400 to-cyan-600",
+      color: "from-[#90e0ef] to-[#48cae4]",
       action: "mood",
     },
     {
       title: "Check Goals",
       icon: "🎯",
-      color: "from-indigo-400 to-indigo-600",
+      color: "from-[#ade8f4] to-[#0077b6]",
       action: "goals",
     },
   ];
@@ -74,46 +119,76 @@ const Home = () => {
   return (
     <div className="w-full max-w-none px-4 space-y-6">
       {/* AI Companion Greeting & Daily Affirmation */}
-      <div className="flex justify-between">
+      <div className="flex justify-between flex-col">
+        <div className="flex justify-between">
+          <div
+            className={`h-100 w-300 bg-gradient-to-r ${timeGreeting.background} rounded-xl p-6 shadow-lg border-l-4 border-[#0077b6] flex flex-col justify-center`}
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <span className="text-6xl">{timeGreeting.emoji}</span>
+              <div>
+                <h1
+                  className="text-5xl font-bold leading-tight"
+                  style={{ color: timeGreeting.textColor }}
+                >
+                  {timeGreeting.greeting}
+                </h1>
+                <h2
+                  className="text-4xl font-bold"
+                  style={{ color: timeGreeting.subTextColor }}
+                >
+                  {userName}!
+                </h2>
+              </div>
+            </div>
+            <p
+              className="text-2xl font-medium text-center"
+              style={{ color: timeGreeting.textColor }}
+            >
+              {timeGreeting.message}
+            </p>
+          </div>
+          <button
+            className="h-10  w-40 rounded-3xl text-white"
+            style={{
+              background: "linear-gradient(135deg, #0077b6 0%, #00b4d8 100%)",
+            }}
+          >
+            21 days challenge
+          </button>
+        </div>
         <div
-          className="rounded-xl p-6 text-white bg-[#381B49]/15 w-[70%]"
-          style={
-            {
-              // background:
-              //   "linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%)",
-              // background: "linear-gradient(135deg, #335765 0%, #5A7D8A 100%)",
-            }
-          }
+          className="rounded-xl p-6 text-white w-[70%] bg-[#009BCA]"
+          // style={{
+          //   backgroundColor: "rgba(0, 180, 216, 0.15)",
+          // }}
         >
           <h2
-            className="text-2xl font-bold mb-2 font-pacifico"
-            style={{ color: "#381B49" }}
+            className="text-2xl font-bold mb-2 font-pacifico text-black"
+            // style={{ color: "#0077b6" }}
           >
             👋 Good Morning, {userName}!
           </h2>
-          <div className="bg-white/20 rounded-lg p-4">
+          <div className="bg-[#90E0EF] rounded-lg p-4">
             <p className="text-black text-sm mb-2">💭 Daily Affirmation</p>
             <p className="text-black font-bold">{dailyAffirmation}</p>
           </div>
         </div>
-
-        <button
-          className="h-10  w-40 rounded-3xl text-white"
-          style={{
-            background: "linear-gradient(135deg, #3F3663 0%, #5D4E7A 100%)",
-          }}
-        >
-          21 days challenge
-        </button>
       </div>
 
       {/* Quick Check-in Tiles */}
       <div className="flex justify-between">
-        <div className=" bg-[#381B49]/15 rounded-xl shadow-lg p-6  w-[70%]">
+        <div
+          className="rounded-xl shadow-lg p-6  w-[70%]"
+          style={{ backgroundColor: "rgba(0, 180, 216, 0.15)" }}
+        >
           <h3 className="text-lg font-semibold text-[#333333] mb-4">
             How are you today?
           </h3>
-          <div className="grid grid-cols-3 gap-3 mb-4 bg-[#BDA1D8]">
+          <div
+            className="grid grid-cols-3 gap-3 mb-4"
+            style={{ backgroundColor: "#ade8f4" }}
+          >
             {quickMoodOptions.map((option) => (
               <button
                 key={option.value}
@@ -148,11 +223,11 @@ const Home = () => {
                 style={
                   energyLevel === option.value
                     ? {
-                        backgroundColor: "var(--primary-blue)",
+                        backgroundColor: "#0077b6",
                         color: "white",
                       }
                     : {
-                        backgroundColor: "#BDA1D8",
+                        backgroundColor: "#ade8f4",
                         color: "#333333",
                       }
                 }
@@ -173,7 +248,10 @@ const Home = () => {
       </div>
 
       {/* AI Suggestions */}
-      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6 relative">
+      <div
+        className="rounded-xl shadow-lg p-6 relative"
+        style={{ backgroundColor: "rgba(145, 181, 0, 0.15)" }}
+      >
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           🌟 AI Suggestions for You
         </h3>
@@ -181,7 +259,8 @@ const Home = () => {
           {aiSuggestions.map((suggestion, index) => (
             <div
               key={index}
-              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer bg-[#BDA1D8]"
+              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              style={{ backgroundColor: "#ade8f4" }}
             >
               <span className="text-xl">{suggestion.icon}</span>
               <p className="text-gray-700">{suggestion.text}</p>
@@ -196,25 +275,41 @@ const Home = () => {
 
       {/* Mini Wellness Dashboard */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-4 text-center">
+        <div
+          className="rounded-xl shadow-lg p-4 text-center"
+          style={{ backgroundColor: "rgba(0, 180, 216, 0.15)" }}
+        >
           <span className="text-2xl mb-2 block">📖</span>
-          <div className="text-lg font-bold text-indigo-600">4</div>
+          <div className="text-lg font-bold" style={{ color: "#0077b6" }}>
+            4
+          </div>
           <p className="text-xs text-gray-600">Journals This Week</p>
         </div>
-        <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-4 text-center">
+        <div
+          className="rounded-xl shadow-lg p-4 text-center"
+          style={{ backgroundColor: "rgba(0, 180, 216, 0.15)" }}
+        >
           <span className="text-2xl mb-2 block">❤️</span>
           <div className="text-lg font-bold text-green-600">Stable</div>
           <p className="text-xs text-gray-600">Mood Trend</p>
         </div>
-        <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-4 text-center">
+        <div
+          className="rounded-xl shadow-lg p-4 text-center"
+          style={{ backgroundColor: "rgba(0, 180, 216, 0.15)" }}
+        >
           <span className="text-2xl mb-2 block">⭐</span>
-          <div className="text-lg font-bold text-purple-600">60%</div>
+          <div className="text-lg font-bold" style={{ color: "#00b4d8" }}>
+            60%
+          </div>
           <p className="text-xs text-gray-600">Goals Progress</p>
         </div>
       </div>
 
       {/* Recent Activity Snapshot */}
-      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6">
+      <div
+        className="rounded-xl shadow-lg p-6"
+        style={{ backgroundColor: "rgba(0, 180, 216, 0.15)" }}
+      >
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Recent Activity
         </h3>
@@ -222,7 +317,8 @@ const Home = () => {
           {recentActivity.map((activity, index) => (
             <div
               key={index}
-              className="flex items-start space-x-3 p-3 rounded-lg bg-[#BDA1D8]"
+              className="flex items-start space-x-3 p-3 rounded-lg"
+              style={{ backgroundColor: "#ade8f4" }}
             >
               <span className="text-lg">{activity.icon}</span>
               <div className="flex-1">
@@ -238,7 +334,10 @@ const Home = () => {
       </div>
 
       {/* Quick Action Shortcuts */}
-      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6">
+      <div
+        className="rounded-xl shadow-lg p-6"
+        style={{ backgroundColor: "rgba(145, 181, 0, 0.15)" }}
+      >
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Quick Actions
         </h3>
@@ -246,7 +345,11 @@ const Home = () => {
           {quickActions.map((action, index) => (
             <button
               key={index}
-              className="flex flex-col items-center p-4 rounded-lg border-2 border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all duration-200 bg-[#BDA1D8]"
+              className="flex flex-col items-center p-4 rounded-lg border-2 border-gray-200 hover:shadow-md transition-all duration-200"
+              style={{
+                backgroundColor: "#ade8f4",
+                borderColor: "#90e0ef",
+              }}
             >
               <div
                 className={`w-10 h-10 bg-gradient-to-r ${action.color} rounded-full flex items-center justify-center text-lg mb-2`}
@@ -262,18 +365,27 @@ const Home = () => {
       </div>
 
       {/* Community Pulse */}
-      <div className="bg-[#381B49]/15 rounded-xl shadow-lg p-6">
+      <div
+        className="rounded-xl shadow-lg p-6"
+        style={{ backgroundColor: "rgba(145, 181, 0, 0.15)" }}
+      >
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
           Community Pulse
         </h3>
         <div className="space-y-3">
-          <div className="flex items-center space-x-3 p-3 bg-[#BDA1D8] rounded-lg">
+          <div
+            className="flex items-center space-x-3 p-3 rounded-lg"
+            style={{ backgroundColor: "#ade8f4" }}
+          >
             <span className="text-xl">💬</span>
             <p className="text-gray-700">
               <strong>15 people</strong> shared uplifting stories today
             </p>
           </div>
-          <div className="flex items-center space-x-3 p-3 bg-[#BDA1D8] rounded-lg">
+          <div
+            className="flex items-center space-x-3 p-3 rounded-lg"
+            style={{ backgroundColor: "#ade8f4" }}
+          >
             <span className="text-xl">🔥</span>
             <p className="text-gray-700">
               Trending: <strong>"Overcoming self-doubt"</strong>
@@ -283,15 +395,23 @@ const Home = () => {
       </div>
 
       {/* Mindful Reminder Widget */}
-      <div className="bg-gradient-to-r from-green-400 to-blue-500 rounded-xl p-6 text-white text-center">
+      <div
+        className="rounded-xl p-6 text-white text-center"
+        style={{
+          background: "linear-gradient(135deg, #0077b6 0%, #00b4d8 100%)",
+        }}
+      >
         <h3 className="text-lg font-semibold mb-2">🌸 Mindful Moment</h3>
-        <p className="text-green-100 mb-4">
+        <p className="mb-4" style={{ color: "rgba(255, 255, 255, 0.9)" }}>
           Take a deep breath. You're doing great.
         </p>
         <div className="w-16 h-16 mx-auto bg-white/20 rounded-full flex items-center justify-center animate-pulse">
           <div className="w-8 h-8 bg-white/40 rounded-full"></div>
         </div>
-        <p className="text-xs text-green-100 mt-2">
+        <p
+          className="text-xs mt-2"
+          style={{ color: "rgba(255, 255, 255, 0.8)" }}
+        >
           Breathe in... breathe out...
         </p>
       </div>

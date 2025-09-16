@@ -140,11 +140,11 @@ const Resources = () => {
   const getTypeColor = (type) => {
     switch (type) {
       case "Article":
-        return "bg-blue-100 text-blue-800";
+        return "bg-[#90e0ef]/20 text-[#0077b6]";
       case "Video":
-        return "bg-red-100 text-red-800";
+        return "bg-[#ade8f4]/20 text-[#0077b6]";
       case "Podcast":
-        return "bg-purple-100 text-purple-800";
+        return "bg-[#00b4d8]/20 text-[#0077b6]";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -208,9 +208,14 @@ const Resources = () => {
               onClick={() => setActiveCategory(category.id)}
               className={`px-4 py-2 rounded-full border-2 transition-colors ${
                 activeCategory === category.id
-                  ? "bg-indigo-100 text-indigo-700 border-indigo-300"
+                  ? "text-white border-[#0077b6]"
                   : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
               }`}
+              style={
+                activeCategory === category.id
+                  ? { backgroundColor: "#0077b6" }
+                  : {}
+              }
             >
               {category.name} ({category.count})
             </button>
@@ -264,7 +269,10 @@ const Resources = () => {
                   <p className="text-gray-500 text-xs mb-4">
                     By {resource.author}
                   </p>
-                  <button className="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                  <button
+                    className="w-full py-2 text-white rounded-lg hover:opacity-90 transition-colors"
+                    style={{ backgroundColor: "#0077b6" }}
+                  >
                     Access Resource
                   </button>
                 </div>
@@ -319,7 +327,14 @@ const Resources = () => {
                     </div>
                   </div>
                 </div>
-                <button className="px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
+                <button
+                  className="px-4 py-2 border rounded-lg hover:opacity-90 transition-colors"
+                  style={{
+                    borderColor: "#0077b6",
+                    color: "#0077b6",
+                    backgroundColor: "rgba(0, 119, 182, 0.05)",
+                  }}
+                >
                   View
                 </button>
               </div>
@@ -357,7 +372,14 @@ const Resources = () => {
                 </div>
               </div>
               <p className="text-gray-600 text-sm mb-4">{tool.description}</p>
-              <button className="w-full py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
+              <button
+                className="w-full py-2 border rounded-lg hover:opacity-90 transition-colors"
+                style={{
+                  borderColor: "#0077b6",
+                  color: "#0077b6",
+                  backgroundColor: "rgba(0, 119, 182, 0.05)",
+                }}
+              >
                 Learn More
               </button>
             </div>

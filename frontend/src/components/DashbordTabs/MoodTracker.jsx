@@ -106,9 +106,15 @@ const MoodTracker = () => {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="What's contributing to this mood?"
-                className="flex-1 px-4 py-2 rounded-lg bg-white/20 text-white placeholder-indigo-200 border border-white/30 focus:border-white/50 focus:outline-none"
+                className="flex-1 px-4 py-2 rounded-lg bg-white/20 text-white border border-white/30 focus:border-white/50 focus:outline-none"
+                style={{
+                  "--placeholder-color": "rgba(0, 119, 182, 0.7)",
+                }}
               />
-              <button className="px-6 py-2 bg-white text-indigo-600 rounded-lg hover:bg-gray-100 transition-colors font-medium">
+              <button
+                className="px-6 py-2 bg-white rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                style={{ color: "#0077b6" }}
+              >
                 Save
               </button>
             </div>
@@ -125,7 +131,7 @@ const MoodTracker = () => {
             </h3>
             <span className="text-2xl">📊</span>
           </div>
-          <div className="text-3xl font-bold text-indigo-600 mb-2">
+          <div className="text-3xl font-bold mb-2" style={{ color: "#0077b6" }}>
             {stats.average}/7
           </div>
           <p className="text-gray-600 text-sm">Based on last 7 entries</p>
@@ -163,10 +169,13 @@ const MoodTracker = () => {
           {weeklyData.map((day, index) => (
             <div key={index} className="flex flex-col items-center">
               <div
-                className={`w-8 bg-indigo-400 rounded-t-lg mb-2 ${
+                className={`w-8 rounded-t-lg mb-2 ${
                   moodOptions[day.mood - 1]?.color
                 }`}
-                style={{ height: `${(day.mood / 7) * 120}px` }}
+                style={{
+                  height: `${(day.mood / 7) * 120}px`,
+                  backgroundColor: "#0077b6",
+                }}
               ></div>
               <span className="text-sm text-gray-600">{day.day}</span>
             </div>
