@@ -5,14 +5,18 @@ const cors = require("cors");
 const onboardingRoutes = require("./routes/onbordingRoutes");
 const authRoutes = require("./routes/authRoutes");
 const chatbotRoutes = require("./routes/chatbotRoutes");
+const journalRoutes = require("./routes/journalRoutes");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Route mounting
 app.use("/api/auth", authRoutes);
 app.use("/api/user/onboarding", onboardingRoutes);
 app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/journals", journalRoutes);
 // Start server regardless of database connection
 const PORT = 3000;
 app.listen(PORT, () => {

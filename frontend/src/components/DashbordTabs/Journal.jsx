@@ -1,12 +1,32 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import { journalAPI, draftManager, themeManager } from "../../utils/journalAPI";
 
 const Journal = () => {
+  // Theme state
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
   // Core state
   const [newEntry, setNewEntry] = useState("");
   const [storyTitle, setStoryTitle] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [isDistractionFree, setIsDistractionFree] = useState(false);
+  const [privacySetting, setPrivacySetting] = useState("private"); // private, friends, public
+  const [currentView, setCurrentView] = useState("write"); // write, my-journals, community
+
+  // Community interaction state
+  const [journalEntries, setJournalEntries] = useState([]);
+  const [communityEntries, setCommunityEntries] = useState([]);
+  const [comments, setComments] = useState({});
+  const [likes, setLikes] = useState({});
+  const [newComment, setNewComment] = useState("");
+  const [activeCommentId, setActiveCommentId] = useState(null);
 
   // Editor customization state
   const [fontSize, setFontSize] = useState(16);
@@ -15,19 +35,25 @@ const Journal = () => {
   const [selectedMood, setSelectedMood] = useState("neutral");
   const [coverImage, setCoverImage] = useState(null);
 
-  // AI Assistant state
-  const [aiSuggestions, setAiSuggestions] = useState([]);
-  const [isAiThinking, setIsAiThinking] = useState(false);
-  const [aiMode, setAiMode] = useState("suggestions"); // suggestions, ideas, motivation
-
-  // Autosave and version history
+  // Autosave and draft state
   const [lastSaved, setLastSaved] = useState(null);
   const [wordCount, setWordCount] = useState(0);
-  const [versionHistory, setVersionHistory] = useState([]);
+  const [isDraft, setIsDraft] = useState(true);
+  const [savedDrafts, setSavedDrafts] = useState([]);
 
   // Refs
   const editorRef = useRef(null);
   const autosaveRef = useRef(null);
+
+  // Mock current user (this would come from auth context)
+  const currentUser = useMemo(
+    () => ({
+      id: 1,
+      name: "Sofikul",
+      avatar: "👤",
+    }),
+    []
+  );
 
   // Font options
   const fontOptions = [
@@ -42,26 +68,39 @@ const Journal = () => {
   // Mood themes
   const moodThemes = {
     happy: {
-      bg: "bg-gradient-to-br from-yellow-50 to-orange-50",
+      bg: isDarkMode
+        ? "bg-gradient-to-br from-yellow-900/20 to-orange-900/20"
+        : "bg-gradient-to-br from-yellow-50 to-orange-50",
       accent: "text-orange-600",
     },
     calm: {
-      bg: "bg-gradient-to-br from-[#90e0ef]/10 to-[#ade8f4]/10",
+      bg: isDarkMode
+        ? "bg-gradient-to-br from-blue-900/20 to-cyan-900/20"
+        : "bg-gradient-to-br from-[#90e0ef]/10 to-[#ade8f4]/10",
       accent: "text-[#0077b6]",
     },
     energetic: {
-      bg: "bg-gradient-to-br from-pink-50 to-red-50",
+      bg: isDarkMode
+        ? "bg-gradient-to-br from-pink-900/20 to-red-900/20"
+        : "bg-gradient-to-br from-pink-50 to-red-50",
       accent: "text-pink-600",
     },
     contemplative: {
-      bg: "bg-gradient-to-br from-[#00b4d8]/10 to-[#0077b6]/10",
+      bg: isDarkMode
+        ? "bg-gradient-to-br from-purple-900/20 to-indigo-900/20"
+        : "bg-gradient-to-br from-[#00b4d8]/10 to-[#0077b6]/10",
       accent: "text-[#0077b6]",
     },
     peaceful: {
-      bg: "bg-gradient-to-br from-green-50 to-teal-50",
+      bg: isDarkMode
+        ? "bg-gradient-to-br from-green-900/20 to-teal-900/20"
+        : "bg-gradient-to-br from-green-50 to-teal-50",
       accent: "text-green-600",
     },
-    neutral: { bg: "bg-white", accent: "text-gray-600" },
+    neutral: {
+      bg: isDarkMode ? "bg-gray-800" : "bg-white",
+      accent: isDarkMode ? "text-gray-300" : "text-gray-600",
+    },
   };
 
   const tags = [
@@ -77,56 +116,159 @@ const Journal = () => {
     "Creativity",
     "Learning",
     "Mindfulness",
+    "Family",
+    "Friends",
+    "Goals",
+    "Memories",
   ];
 
-  const entries = [
-    {
-      id: 1,
-      title: "Morning Reflections",
-      date: "Today",
-      tags: ["Gratitude", "Personal Growth"],
-      content:
-        "Had a great conversation with my friend today. Feeling really grateful for the support system in my life...",
-      timestamp: "2:30 PM",
-      wordCount: 245,
-      isPublic: false,
-    },
-    {
-      id: 2,
-      title: "Overcoming Challenges",
-      date: "Yesterday",
-      tags: ["Challenges", "Mindfulness"],
-      content:
-        "Feeling a bit overwhelmed with upcoming deadlines. Need to remember to take things one step at a time...",
-      timestamp: "8:45 PM",
-      wordCount: 189,
-      isPublic: true,
-    },
-  ];
-
-  // Mock AI responses
-  const getAiSuggestion = (mode) => {
-    const suggestions = {
-      suggestions: [
-        "Consider expanding on how this experience made you feel",
-        "Try adding more sensory details to make your story come alive",
-        "This is a powerful insight - what led you to this realization?",
-      ],
-      ideas: [
-        "Write about a moment that changed your perspective",
-        "Describe a place that brings you peace",
-        "Explore a challenge you've overcome recently",
-      ],
-      motivation: [
-        "You're doing great! Your thoughts matter and deserve to be shared",
-        "Every word you write is progress. Keep going!",
-        "Your unique perspective adds value to the world",
-      ],
-    };
-    return suggestions[mode][
-      Math.floor(Math.random() * suggestions[mode].length)
+  // Initialize data from backend
+  useEffect(() => {
+    // Mock journal entries data (fallback)
+    const mockJournalEntries = [
+      {
+        id: 1,
+        title: "Morning Reflections",
+        content:
+          "Had a great conversation with my friend today. Feeling really grateful for the support system in my life. Sometimes it's the small moments that matter most...",
+        author: currentUser,
+        date: new Date(),
+        tags: ["Gratitude", "Personal Growth"],
+        privacy: "private",
+        likes: 0,
+        comments: [],
+        isDraft: false,
+        wordCount: 245,
+      },
+      {
+        id: 2,
+        title: "Overcoming Challenges",
+        content:
+          "Today was tough, but I managed to push through some difficult situations. Learning to be more patient with myself and others...",
+        author: currentUser,
+        date: new Date(Date.now() - 86400000),
+        tags: ["Challenges", "Mindfulness"],
+        privacy: "friends",
+        likes: 3,
+        comments: [
+          {
+            id: 1,
+            author: "Alex",
+            content: "Keep going! You're doing great!",
+            timestamp: new Date(),
+          },
+        ],
+        isDraft: false,
+        wordCount: 189,
+      },
     ];
-  };
+
+    // Mock community entries (fallback)
+    const mockCommunityEntries = [
+      {
+        id: 3,
+        title: "Finding Peace in Nature",
+        content:
+          "Spent the morning hiking and reflecting on life. Nature has this incredible way of putting everything into perspective...",
+        author: { id: 2, name: "Alex", avatar: "🌟" },
+        date: new Date(Date.now() - 172800000),
+        tags: ["Nature", "Mindfulness", "Peace"],
+        privacy: "public",
+        likes: 12,
+        comments: [
+          {
+            id: 1,
+            author: "Sarah",
+            content: "Beautiful reflection! Nature is so healing.",
+            timestamp: new Date(),
+          },
+          {
+            id: 2,
+            author: "Mike",
+            content: "Thanks for sharing this. I needed to read this today.",
+            timestamp: new Date(),
+          },
+        ],
+        isDraft: false,
+        wordCount: 156,
+      },
+      {
+        id: 4,
+        title: "Lessons from Failure",
+        content:
+          "Failed at something important today, but I'm choosing to see it as a learning opportunity. Growth happens outside our comfort zone...",
+        author: { id: 3, name: "Sarah", avatar: "💫" },
+        date: new Date(Date.now() - 259200000),
+        tags: ["Growth", "Resilience", "Learning"],
+        privacy: "public",
+        likes: 8,
+        comments: [
+          {
+            id: 1,
+            author: "Sofikul",
+            content: "This is so inspiring! Thank you for being vulnerable.",
+            timestamp: new Date(),
+          },
+        ],
+        isDraft: false,
+        wordCount: 134,
+      },
+    ];
+
+    const initializeData = async () => {
+      try {
+        // Load user's journals
+        const userJournalsResponse = await journalAPI.getUserJournals();
+        setJournalEntries(userJournalsResponse.data || []);
+
+        // Load community journals
+        const communityResponse = await journalAPI.getCommunityJournals();
+        setCommunityEntries(communityResponse.data || []);
+
+        // Initialize likes and comments state
+        const allEntries = [
+          ...(userJournalsResponse.data || []),
+          ...(communityResponse.data || []),
+        ];
+        const likesData = {};
+        const commentsData = {};
+
+        allEntries.forEach((entry) => {
+          likesData[entry._id || entry.id] = {
+            count: entry.likeCount || entry.likes?.length || 0,
+            liked: entry.isLikedBy?.(currentUser.id) || false,
+          };
+          commentsData[entry._id || entry.id] = entry.comments || [];
+        });
+
+        setLikes(likesData);
+        setComments(commentsData);
+
+        // Load saved drafts from localStorage
+        const localDrafts = draftManager.getLocalDrafts();
+        setSavedDrafts(localDrafts);
+      } catch (error) {
+        console.error("Failed to initialize data:", error);
+        // Fallback to mock data if API fails
+        setJournalEntries(mockJournalEntries);
+        setCommunityEntries(mockCommunityEntries);
+
+        const allEntries = [...mockJournalEntries, ...mockCommunityEntries];
+        const likesData = {};
+        const commentsData = {};
+
+        allEntries.forEach((entry) => {
+          likesData[entry.id] = { count: entry.likes, liked: false };
+          commentsData[entry.id] = entry.comments;
+        });
+
+        setLikes(likesData);
+        setComments(commentsData);
+      }
+    };
+
+    initializeData();
+  }, [currentUser]);
 
   // Word count calculation
   useEffect(() => {
@@ -137,6 +279,73 @@ const Journal = () => {
     setWordCount(newEntry.trim() === "" ? 0 : words);
   }, [newEntry]);
 
+  // Functions
+  const toggleTheme = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    themeManager.saveTheme(newTheme);
+  };
+
+  const saveDraft = useCallback(async () => {
+    if (newEntry.trim() || storyTitle.trim()) {
+      const draftData = {
+        title: storyTitle || "Untitled",
+        content: newEntry,
+        tags: selectedTags,
+        mood: selectedMood,
+        privacy: privacySetting,
+        wordCount,
+        fontSettings: {
+          fontFamily,
+          fontSize,
+          textColor,
+        },
+      };
+
+      try {
+        // Try to save to backend first
+        const response = await journalAPI.saveDraft(draftData);
+
+        // Also save locally as backup
+        const localDraft = draftManager.saveDraftLocally(draftData);
+        setSavedDrafts((prev) => [
+          localDraft,
+          ...prev.filter((d) => d.id !== localDraft.id),
+        ]);
+
+        setLastSaved(new Date());
+        setIsDraft(true);
+
+        console.log("Draft saved successfully:", response);
+      } catch (error) {
+        console.error(
+          "Failed to save draft to backend, saving locally:",
+          error
+        );
+
+        // Fallback to local storage only
+        const localDraft = draftManager.saveDraftLocally(draftData);
+        setSavedDrafts((prev) => [
+          localDraft,
+          ...prev.filter((d) => d.id !== localDraft.id),
+        ]);
+
+        setLastSaved(new Date());
+        setIsDraft(true);
+      }
+    }
+  }, [
+    newEntry,
+    storyTitle,
+    selectedTags,
+    selectedMood,
+    privacySetting,
+    wordCount,
+    fontFamily,
+    fontSize,
+    textColor,
+  ]);
+
   // Autosave functionality
   useEffect(() => {
     if (newEntry.trim() || storyTitle.trim()) {
@@ -144,9 +353,7 @@ const Journal = () => {
         clearTimeout(autosaveRef.current);
       }
       autosaveRef.current = setTimeout(() => {
-        setLastSaved(new Date());
-        // Here you would save to localStorage or API
-        console.log("Auto-saved story");
+        saveDraft();
       }, 2000);
     }
     return () => {
@@ -154,19 +361,151 @@ const Journal = () => {
         clearTimeout(autosaveRef.current);
       }
     };
-  }, [newEntry, storyTitle]);
+  }, [newEntry, storyTitle, saveDraft]);
 
-  // AI assistance trigger
-  const triggerAiSuggestion = (mode) => {
-    setIsAiThinking(true);
-    setTimeout(() => {
-      const suggestion = getAiSuggestion(mode, newEntry);
-      setAiSuggestions((prev) => [
-        ...prev.slice(-2),
-        { mode, text: suggestion, id: Date.now() },
-      ]);
-      setIsAiThinking(false);
-    }, 1000);
+  // Theme persistence
+  useEffect(() => {
+    const savedTheme = themeManager.getTheme();
+    setIsDarkMode(savedTheme);
+  }, []);
+
+  // Theme classes
+  const themeClasses = {
+    primary: isDarkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900",
+    secondary: isDarkMode
+      ? "bg-gray-800 text-gray-200"
+      : "bg-gray-50 text-gray-700",
+    border: isDarkMode ? "border-gray-700" : "border-gray-200",
+    input: isDarkMode
+      ? "bg-gray-700 text-white border-gray-600"
+      : "bg-white text-gray-900 border-gray-300",
+    button: isDarkMode
+      ? "bg-gray-700 hover:bg-gray-600"
+      : "bg-gray-100 hover:bg-gray-200",
+  };
+
+  const publishEntry = async () => {
+    if (newEntry.trim() && storyTitle.trim()) {
+      const journalData = {
+        title: storyTitle,
+        content: newEntry,
+        tags: selectedTags,
+        privacy: privacySetting,
+        mood: selectedMood,
+        isDraft: false,
+        fontSettings: {
+          fontFamily,
+          fontSize,
+          textColor,
+        },
+      };
+
+      try {
+        const response = await journalAPI.createJournal(journalData);
+        const newJournalEntry = response.data;
+
+        // Update local state
+        setJournalEntries((prev) => [newJournalEntry, ...prev]);
+
+        // If public, also add to community entries
+        if (privacySetting === "public") {
+          setCommunityEntries((prev) => [newJournalEntry, ...prev]);
+        }
+
+        // Initialize likes and comments for new entry
+        const entryId = newJournalEntry._id || newJournalEntry.id;
+        setLikes((prev) => ({
+          ...prev,
+          [entryId]: { count: 0, liked: false },
+        }));
+        setComments((prev) => ({ ...prev, [entryId]: [] }));
+
+        // Clear form
+        setNewEntry("");
+        setStoryTitle("");
+        setSelectedTags([]);
+        setPrivacySetting("private");
+        setIsDraft(false);
+        setIsCreateMode(false);
+        setCurrentView("my-journals");
+
+        console.log("Journal published successfully:", response);
+      } catch (error) {
+        console.error("Failed to publish journal:", error);
+        alert("Failed to publish journal. Please try again.");
+      }
+    }
+  };
+
+  const toggleLike = async (entryId) => {
+    try {
+      const response = await journalAPI.toggleLike(entryId);
+
+      setLikes((prev) => ({
+        ...prev,
+        [entryId]: {
+          count: response.data.likeCount,
+          liked: response.data.liked,
+        },
+      }));
+
+      console.log("Like toggled successfully:", response);
+    } catch (error) {
+      console.error("Failed to toggle like:", error);
+      // Fallback to local state update
+      setLikes((prev) => {
+        const current = prev[entryId] || { count: 0, liked: false };
+        return {
+          ...prev,
+          [entryId]: {
+            count: current.liked ? current.count - 1 : current.count + 1,
+            liked: !current.liked,
+          },
+        };
+      });
+    }
+  };
+
+  const addComment = async (entryId) => {
+    if (newComment.trim()) {
+      try {
+        const response = await journalAPI.addComment(
+          entryId,
+          newComment.trim()
+        );
+        const comment = response.data;
+
+        setComments((prev) => ({
+          ...prev,
+          [entryId]: [...(prev[entryId] || []), comment],
+        }));
+
+        setNewComment("");
+        setActiveCommentId(null);
+
+        console.log("Comment added successfully:", response);
+      } catch (error) {
+        console.error("Failed to add comment:", error);
+
+        // Fallback to local state update
+        const fallbackComment = {
+          id: Date.now(),
+          author: currentUser.name,
+          content: newComment.trim(),
+          timestamp: new Date(),
+        };
+
+        setComments((prev) => ({
+          ...prev,
+          [entryId]: [...(prev[entryId] || []), fallbackComment],
+        }));
+
+        setNewComment("");
+        setActiveCommentId(null);
+
+        alert("Failed to save comment to server, but added locally.");
+      }
+    }
   };
 
   const toggleTag = (tag) => {
@@ -175,163 +514,157 @@ const Journal = () => {
     );
   };
 
-  const saveVersion = () => {
-    if (newEntry.trim()) {
-      const version = {
-        id: Date.now(),
-        title: storyTitle || "Untitled",
-        content: newEntry,
-        savedAt: new Date(),
-        wordCount,
-      };
-      setVersionHistory((prev) => [version, ...prev.slice(0, 9)]); // Keep last 10 versions
-    }
+  const loadDraft = (draft) => {
+    setNewEntry(draft.content);
+    setStoryTitle(draft.title);
+    setSelectedTags(draft.tags);
+    setSelectedMood(draft.mood);
+    setPrivacySetting(draft.privacy);
+    setIsCreateMode(true);
+    setCurrentView("write");
   };
 
-  const loadVersion = (version) => {
-    setNewEntry(version.content);
-    setStoryTitle(version.title);
-  };
-
-  if (!isCreateMode) {
-    return (
-      <div className="w-full max-w-none px-4 space-y-8">
-        {/* Header with Create Story Button */}
-        <div
-          className="rounded-xl p-8 text-white"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%)",
-          }}
-        >
-          <div className="flex justify-between items-center">
+  // Render functions
+  const renderJournalCard = (entry, showInteractions = true) => (
+    <div
+      key={entry.id}
+      className={`${themeClasses.primary} rounded-xl shadow-lg border ${themeClasses.border} overflow-hidden`}
+    >
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="text-2xl">{entry.author.avatar}</div>
             <div>
-              <h2 className="text-3xl font-bold mb-2">Your Journal</h2>
-              <p className="text-white/80">
-                Express your thoughts, share your stories, and connect with your
-                inner self
+              <h3 className="font-semibold">{entry.author.name}</h3>
+              <p className="text-sm text-gray-500">
+                {entry.date.toLocaleDateString()}
               </p>
             </div>
-            <button
-              onClick={() => setIsCreateMode(true)}
-              className="bg-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              style={{ color: "var(--primary-blue)" }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = "var(--light-blue)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "white";
-              }}
+          </div>
+          <div className="flex items-center space-x-2">
+            <span
+              className={`px-2 py-1 rounded-full text-xs ${
+                entry.privacy === "public"
+                  ? "bg-green-100 text-green-700"
+                  : entry.privacy === "friends"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-gray-100 text-gray-700"
+              }`}
             >
-              ✨ Create Story
-            </button>
+              {entry.privacy}
+            </span>
+            {entry.isDraft && (
+              <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
+                Draft
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100 wellness-transition wellness-hover">
-            <div className="text-2xl mb-2">📝</div>
-            <div className="text-2xl font-bold" style={{ color: "#0077b6" }}>
-              {entries.length}
-            </div>
-            <div className="text-sm text-[#666666]">Total Stories</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100 wellness-transition wellness-hover">
-            <div className="text-2xl mb-2">🔥</div>
-            <div className="text-2xl font-bold" style={{ color: "#FF9B71" }}>
-              7
-            </div>
-            <div className="text-sm text-[#666666]">Day Streak</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100">
-            <div className="text-2xl mb-2">💭</div>
-            <div className="text-2xl font-bold" style={{ color: "#91B500" }}>
-              1,234
-            </div>
-            <div className="text-sm text-gray-600">Words Written</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100">
-            <div className="text-2xl mb-2">🌟</div>
-            <div className="text-2xl font-bold text-green-600">3</div>
-            <div className="text-sm text-gray-600">Public Stories</div>
-          </div>
+        <h2 className="text-xl font-bold mb-3">{entry.title}</h2>
+
+        <div className="flex flex-wrap gap-2 mb-3">
+          {entry.tags.map((tag) => (
+            <span
+              key={tag}
+              className="px-2 py-1 rounded-full text-xs bg-[#90e0ef]/20 text-[#0077b6]"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
 
-        {/* Recent Stories */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-          <div className="p-6 border-b border-gray-100">
-            <h3 className="text-xl font-semibold text-gray-800">
-              Recent Stories
-            </h3>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {entries.map((entry) => (
-              <div
-                key={entry.id}
-                className="p-6 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h4 className="text-lg font-medium text-gray-800">
-                        {entry.title}
-                      </h4>
-                      {entry.isPublic && (
-                        <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
-                          Public
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {entry.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-1 rounded-full text-xs"
-                          style={{
-                            backgroundColor: "rgba(145, 181, 0, 0.1)",
-                            color: "#91B500",
-                          }}
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <p className="text-gray-600 mb-2 line-clamp-2">
-                      {entry.content}
-                    </p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>
-                        {entry.date} • {entry.timestamp}
+        <p className="text-gray-600 mb-4 line-clamp-3">{entry.content}</p>
+
+        <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+          <span>
+            {entry.wordCount} words • {Math.ceil(entry.wordCount / 200)} min
+            read
+          </span>
+        </div>
+
+        {showInteractions && (
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => toggleLike(entry.id)}
+                  className={`flex items-center space-x-1 ${
+                    likes[entry.id]?.liked ? "text-red-500" : "text-gray-500"
+                  } hover:text-red-500 transition-colors`}
+                >
+                  <span>{likes[entry.id]?.liked ? "❤️" : "🤍"}</span>
+                  <span>{likes[entry.id]?.count || 0}</span>
+                </button>
+
+                <button
+                  onClick={() =>
+                    setActiveCommentId(
+                      activeCommentId === entry.id ? null : entry.id
+                    )
+                  }
+                  className="flex items-center space-x-1 text-gray-500 hover:text-blue-500 transition-colors"
+                >
+                  <span>💬</span>
+                  <span>{comments[entry.id]?.length || 0}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Comments section */}
+            {activeCommentId === entry.id && (
+              <div className="mt-4 space-y-3">
+                {comments[entry.id]?.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className={`${themeClasses.secondary} p-3 rounded-lg`}
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-semibold text-sm">
+                        {comment.author}
                       </span>
-                      <span>{entry.wordCount} words</span>
+                      <span className="text-xs text-gray-500">
+                        {comment.timestamp.toLocaleTimeString()}
+                      </span>
                     </div>
+                    <p className="text-sm">{comment.content}</p>
                   </div>
-                  <button className="text-gray-400 hover:text-gray-600 ml-4">
-                    <svg
-                      className="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                    </svg>
+                ))}
+
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Write a comment..."
+                    className={`flex-1 p-2 rounded-lg ${themeClasses.input} focus:ring-2 focus:ring-[#0077b6] focus:border-[#0077b6]`}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && addComment(entry.id)
+                    }
+                  />
+                  <button
+                    onClick={() => addComment(entry.id)}
+                    className="px-4 py-2 bg-[#0077b6] text-white rounded-lg hover:bg-[#0096c7] transition-colors"
+                  >
+                    Post
                   </button>
                 </div>
               </div>
-            ))}
+            )}
           </div>
-        </div>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
 
-  // Create Story Mode - Full Writing Interface
-  return (
+  const renderWriteView = () => (
     <div
       className={`min-h-screen transition-all duration-300 ${moodThemes[selectedMood].bg}`}
     >
       {/* Top Navigation Bar */}
-      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <div
+        className={`${themeClasses.primary} shadow-sm border-b ${themeClasses.border} sticky top-0 z-50`}
+      >
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
@@ -353,21 +686,19 @@ const Journal = () => {
                   />
                 </svg>
               </button>
-              <h1 className="text-xl font-semibold text-gray-800">
-                Create Your Story
-              </h1>
+              <h1 className="text-xl font-semibold">Write Your Journal</h1>
             </div>
 
             <div className="flex items-center space-x-3">
               {lastSaved && (
                 <span className="text-sm text-gray-500">
-                  Saved {lastSaved.toLocaleTimeString()}
+                  Auto-saved {lastSaved.toLocaleTimeString()}
                 </span>
               )}
               <button
                 onClick={() => setIsDistractionFree(!isDistractionFree)}
-                className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
-                title="Distraction-free mode"
+                className={`p-2 rounded-lg ${themeClasses.button} transition-all`}
+                title="Focus mode"
               >
                 <svg
                   className="w-5 h-5"
@@ -402,15 +733,17 @@ const Journal = () => {
               isDistractionFree ? "col-span-4" : "col-span-3"
             } transition-all duration-300`}
           >
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 min-h-[600px]">
+            <div
+              className={`${themeClasses.primary} rounded-xl shadow-lg border ${themeClasses.border} min-h-[600px]`}
+            >
               {/* Story Title */}
-              <div className="p-6 border-b border-gray-100">
+              <div className={`p-6 border-b ${themeClasses.border}`}>
                 <input
                   type="text"
-                  placeholder="Enter your story title..."
+                  placeholder="Enter your journal title..."
                   value={storyTitle}
                   onChange={(e) => setStoryTitle(e.target.value)}
-                  className="w-full text-2xl font-bold text-gray-800 placeholder-gray-400 border-none outline-none bg-transparent"
+                  className={`w-full text-2xl font-bold placeholder-gray-400 border-none outline-none bg-transparent`}
                   style={{ fontFamily, fontSize: fontSize + 4 }}
                 />
               </div>
@@ -421,7 +754,7 @@ const Journal = () => {
                   ref={editorRef}
                   value={newEntry}
                   onChange={(e) => setNewEntry(e.target.value)}
-                  placeholder="Start writing your story... Let your thoughts flow freely."
+                  placeholder="Start writing your thoughts... Let your emotions flow freely."
                   className="w-full min-h-[400px] resize-none border-none outline-none bg-transparent leading-relaxed"
                   style={{
                     fontFamily,
@@ -433,25 +766,31 @@ const Journal = () => {
               </div>
 
               {/* Bottom Actions */}
-              <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+              <div
+                className={`px-6 py-4 border-t ${themeClasses.border} ${themeClasses.secondary} rounded-b-xl`}
+              >
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
                     <span>{wordCount} words</span>
                     <span>•</span>
                     <span>{Math.ceil(wordCount / 200)} min read</span>
+                    {isDraft && (
+                      <span className="text-yellow-600">• Draft</span>
+                    )}
                   </div>
                   <div className="flex space-x-3">
                     <button
-                      onClick={saveVersion}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                      onClick={saveDraft}
+                      className={`px-4 py-2 ${themeClasses.button} rounded-lg transition-colors`}
                     >
-                      Save Your Story
+                      Save Draft
                     </button>
                     <button
-                      className="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
-                      style={{ backgroundColor: "#0077b6" }}
+                      onClick={publishEntry}
+                      className="px-4 py-2 bg-[#0077b6] text-white rounded-lg hover:bg-[#0096c7] transition-colors"
+                      disabled={!newEntry.trim() || !storyTitle.trim()}
                     >
-                      Make It Public
+                      Publish
                     </button>
                   </div>
                 </div>
@@ -459,24 +798,107 @@ const Journal = () => {
             </div>
           </div>
 
-          {/* Right Panel - Settings & AI Assistant */}
+          {/* Right Panel - Settings */}
           {!isDistractionFree && (
             <div className="col-span-1 space-y-4">
-              {/* Text Customization */}
-              <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
-                <h3 className="font-semibold text-gray-800 mb-4">
-                  ✨ Text Style
-                </h3>
+              {/* Privacy Settings */}
+              <div
+                className={`${themeClasses.primary} rounded-xl shadow-lg p-4 border ${themeClasses.border}`}
+              >
+                <h3 className="font-semibold mb-4">🔒 Privacy Settings</h3>
+                <div className="space-y-2">
+                  {[
+                    {
+                      value: "private",
+                      label: "Private",
+                      desc: "Only you can see this",
+                      icon: "🔒",
+                    },
+                    {
+                      value: "friends",
+                      label: "Friends Only",
+                      desc: "Only your friends can see",
+                      icon: "👥",
+                    },
+                    {
+                      value: "public",
+                      label: "Public",
+                      desc: "Everyone can see and interact",
+                      icon: "🌍",
+                    },
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className="flex items-center space-x-3 cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        value={option.value}
+                        checked={privacySetting === option.value}
+                        onChange={(e) => setPrivacySetting(e.target.value)}
+                        className="text-[#0077b6]"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span>{option.icon}</span>
+                          <span className="font-medium">{option.label}</span>
+                        </div>
+                        <p className="text-xs text-gray-500">{option.desc}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
-                {/* Font Family */}
+              {/* Tags */}
+              <div
+                className={`${themeClasses.primary} rounded-xl shadow-lg p-4 border ${themeClasses.border}`}
+              >
+                <h3 className="font-semibold mb-4">🏷️ Tags</h3>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {selectedTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2 py-1 rounded-full text-xs bg-[#90e0ef]/20 text-[#0077b6] flex items-center"
+                    >
+                      {tag}
+                      <button
+                        onClick={() => toggleTag(tag)}
+                        className="ml-1 hover:opacity-70"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {tags
+                    .filter((tag) => !selectedTags.includes(tag))
+                    .slice(0, 8)
+                    .map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => toggleTag(tag)}
+                        className={`text-xs ${themeClasses.button} px-2 py-1 rounded-full transition-colors`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Text Customization */}
+              <div
+                className={`${themeClasses.primary} rounded-xl shadow-lg p-4 border ${themeClasses.border}`}
+              >
+                <h3 className="font-semibold mb-4">✨ Text Style</h3>
+
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Font
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Font</label>
                   <select
                     value={fontFamily}
                     onChange={(e) => setFontFamily(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0077b6] focus:border-[#0077b6]"
+                    className={`w-full p-2 rounded-lg ${themeClasses.input} focus:ring-2 focus:ring-[#0077b6]`}
                   >
                     {fontOptions.map((font) => (
                       <option key={font.value} value={font.value}>
@@ -486,9 +908,8 @@ const Journal = () => {
                   </select>
                 </div>
 
-                {/* Font Size */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium mb-2">
                     Size: {fontSize}px
                   </label>
                   <input
@@ -501,119 +922,8 @@ const Journal = () => {
                   />
                 </div>
 
-                {/* Text Color */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Text Color
-                  </label>
-                  <div className="flex space-x-2">
-                    {[
-                      "#374151",
-                      "#1f2937",
-                      "#7c3aed",
-                      "#dc2626",
-                      "#059669",
-                    ].map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setTextColor(color)}
-                        className={`w-8 h-8 rounded-full border-2 ${
-                          textColor === color
-                            ? "border-gray-400"
-                            : "border-gray-200"
-                        }`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Story Settings */}
-              <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
-                <h3 className="font-semibold text-gray-800 mb-4">
-                  📚 Story Settings
-                </h3>
-
-                {/* Tags */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tags
-                  </label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {selectedTags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-2 py-1 rounded-full text-xs flex items-center"
-                        style={{
-                          backgroundColor: "rgba(145, 181, 0, 0.1)",
-                          color: "#91B500",
-                        }}
-                      >
-                        {tag}
-                        <button
-                          onClick={() => toggleTag(tag)}
-                          className="ml-1 hover:opacity-70"
-                          style={{ color: "#91B500" }}
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {tags
-                      .filter((tag) => !selectedTags.includes(tag))
-                      .slice(0, 6)
-                      .map((tag) => (
-                        <button
-                          key={tag}
-                          onClick={() => toggleTag(tag)}
-                          className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full hover:bg-gray-200 transition-colors"
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                  </div>
-                </div>
-
-                {/* Cover Image */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Cover Image
-                  </label>
-                  <div
-                    onClick={() => setCoverImage("placeholder")}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-[#0077b6] transition-colors"
-                  >
-                    {coverImage ? (
-                      <div className="text-green-600">✓ Image uploaded</div>
-                    ) : (
-                      <div className="text-gray-500">
-                        <svg
-                          className="w-8 h-8 mx-auto mb-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                        Click to upload
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Mood Board */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mood
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Mood</label>
                   <div className="grid grid-cols-2 gap-2">
                     {Object.entries(moodThemes).map(([mood, theme]) => (
                       <button
@@ -632,102 +942,23 @@ const Journal = () => {
                 </div>
               </div>
 
-              {/* AI Writing Assistant */}
-              <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
-                <h3 className="font-semibold text-gray-800 mb-4">
-                  🤖 AI Writing Assistant
-                </h3>
-
-                {/* AI Mode Selector */}
-                <div className="mb-4">
-                  <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                    {["suggestions", "ideas", "motivation"].map((mode) => (
-                      <button
-                        key={mode}
-                        onClick={() => setAiMode(mode)}
-                        className={`flex-1 py-2 px-3 rounded-md text-xs font-medium capitalize transition-colors ${
-                          aiMode === mode
-                            ? "bg-white shadow-sm"
-                            : "text-gray-600 hover:text-gray-800"
-                        }`}
-                        style={aiMode === mode ? { color: "#91B500" } : {}}
-                      >
-                        {mode}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* AI Suggestions */}
-                <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
-                  {aiSuggestions
-                    .filter((suggestion) => suggestion.mode === aiMode)
-                    .slice(-3)
-                    .map((suggestion) => (
-                      <div
-                        key={suggestion.id}
-                        className="bg-gray-50 p-3 rounded-lg text-sm text-gray-700"
-                      >
-                        {suggestion.text}
-                      </div>
-                    ))}
-                  {isAiThinking && (
-                    <div
-                      className="p-3 rounded-lg text-sm flex items-center"
-                      style={{
-                        backgroundColor: "rgba(145, 181, 0, 0.1)",
-                        color: "#91B500",
-                      }}
-                    >
-                      <div
-                        className="animate-spin w-4 h-4 border-2 rounded-full mr-2"
-                        style={{
-                          borderColor: "rgba(145, 181, 0, 0.3)",
-                          borderTopColor: "#91B500",
-                        }}
-                      ></div>
-                      AI is thinking...
-                    </div>
-                  )}
-                </div>
-
-                {/* AI Action Buttons */}
-                <div className="space-y-2">
-                  <button
-                    onClick={() => triggerAiSuggestion(aiMode)}
-                    disabled={isAiThinking}
-                    className="w-full py-2 text-white rounded-lg hover:opacity-90 transition-colors text-sm disabled:opacity-50"
-                    style={{ backgroundColor: "#91B500" }}
-                  >
-                    Get{" "}
-                    {aiMode === "suggestions"
-                      ? "Writing Tips"
-                      : aiMode === "ideas"
-                      ? "Story Ideas"
-                      : "Motivation"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Version History */}
-              {versionHistory.length > 0 && (
-                <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100">
-                  <h3 className="font-semibold text-gray-800 mb-4">
-                    📝 Version History
-                  </h3>
+              {/* Saved Drafts */}
+              {savedDrafts.length > 0 && (
+                <div
+                  className={`${themeClasses.primary} rounded-xl shadow-lg p-4 border ${themeClasses.border}`}
+                >
+                  <h3 className="font-semibold mb-4">📝 Recent Drafts</h3>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {versionHistory.slice(0, 5).map((version) => (
+                    {savedDrafts.slice(0, 3).map((draft) => (
                       <button
-                        key={version.id}
-                        onClick={() => loadVersion(version)}
-                        className="w-full text-left p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        key={draft.id}
+                        onClick={() => loadDraft(draft)}
+                        className={`w-full text-left p-2 ${themeClasses.secondary} rounded-lg hover:opacity-80 transition-colors`}
                       >
-                        <div className="text-sm font-medium text-gray-800">
-                          {version.title}
-                        </div>
+                        <div className="text-sm font-medium">{draft.title}</div>
                         <div className="text-xs text-gray-500">
-                          {version.savedAt.toLocaleString()} •{" "}
-                          {version.wordCount} words
+                          {draft.savedAt.toLocaleString()} • {draft.wordCount}{" "}
+                          words
                         </div>
                       </button>
                     ))}
@@ -737,6 +968,319 @@ const Journal = () => {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+
+  const renderMyJournalsView = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">My Journals</h2>
+        <button
+          onClick={() => {
+            setIsCreateMode(true);
+            setCurrentView("write");
+          }}
+          className="px-4 py-2 bg-[#0077b6] text-white rounded-lg hover:bg-[#0096c7] transition-colors flex items-center space-x-2"
+        >
+          <span>✨</span>
+          <span>Write New Entry</span>
+        </button>
+      </div>
+
+      <div className="grid gap-6">
+        {journalEntries.length === 0 && savedDrafts.length === 0 ? (
+          <div
+            className={`${themeClasses.primary} rounded-xl p-8 text-center border ${themeClasses.border}`}
+          >
+            <div className="text-4xl mb-4">📝</div>
+            <h3 className="text-xl font-semibold mb-2">No journals yet</h3>
+            <p className="text-gray-500 mb-4">
+              Start writing to see your entries here
+            </p>
+            <button
+              onClick={() => {
+                setIsCreateMode(true);
+                setCurrentView("write");
+              }}
+              className="px-6 py-2 bg-[#0077b6] text-white rounded-lg hover:bg-[#0096c7] transition-colors"
+            >
+              Write Your First Entry
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Drafts Section */}
+            {savedDrafts.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-700 flex items-center">
+                  <span className="mr-2">📄</span>
+                  Drafts ({savedDrafts.length})
+                </h3>
+                <div className="grid gap-4">
+                  {savedDrafts.map((draft) => (
+                    <div
+                      key={draft.id}
+                      className={`${themeClasses.primary} rounded-xl shadow-lg border ${themeClasses.border} overflow-hidden`}
+                    >
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="text-2xl">{currentUser.avatar}</div>
+                            <div>
+                              <h3 className="font-semibold">
+                                {currentUser.name}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                {new Date(draft.savedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
+                              Draft
+                            </span>
+                          </div>
+                        </div>
+
+                        <h2 className="text-xl font-bold mb-3">
+                          {draft.title}
+                        </h2>
+
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {draft.tags?.map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-1 rounded-full text-xs bg-[#90e0ef]/20 text-[#0077b6]"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        <p className="text-gray-600 mb-4 line-clamp-3">
+                          {draft.content}
+                        </p>
+
+                        <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                          <span>
+                            {draft.wordCount || 0} words •{" "}
+                            {Math.ceil((draft.wordCount || 0) / 200)} min read
+                          </span>
+                          <span>
+                            Saved {new Date(draft.savedAt).toLocaleTimeString()}
+                          </span>
+                        </div>
+
+                        <div className="border-t pt-4">
+                          <div className="flex space-x-3">
+                            <button
+                              onClick={() => loadDraft(draft)}
+                              className="px-4 py-2 bg-[#0077b6] text-white rounded-lg hover:bg-[#0096c7] transition-colors flex items-center space-x-2"
+                            >
+                              <span>✏️</span>
+                              <span>Continue Writing</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (
+                                  confirm(
+                                    "Are you sure you want to delete this draft?"
+                                  )
+                                ) {
+                                  draftManager.deleteLocalDraft(draft.id);
+                                  setSavedDrafts((prev) =>
+                                    prev.filter((d) => d.id !== draft.id)
+                                  );
+                                }
+                              }}
+                              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Published Entries Section */}
+            {journalEntries.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-700 flex items-center">
+                  <span className="mr-2">📚</span>
+                  Published Entries ({journalEntries.length})
+                </h3>
+                <div className="grid gap-4">
+                  {journalEntries.map((entry) =>
+                    renderJournalCard(entry, false)
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderCommunityView = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Community Journals</h2>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-500">
+            Connect and inspire each other
+          </span>
+        </div>
+      </div>
+
+      <div className="grid gap-6">
+        {communityEntries.length === 0 ? (
+          <div
+            className={`${themeClasses.primary} rounded-xl p-8 text-center border ${themeClasses.border}`}
+          >
+            <div className="text-4xl mb-4">🌟</div>
+            <h3 className="text-xl font-semibold mb-2">
+              No public entries yet
+            </h3>
+            <p className="text-gray-500">
+              Be the first to share your thoughts with the community!
+            </p>
+          </div>
+        ) : (
+          communityEntries.map((entry) => renderJournalCard(entry, true))
+        )}
+      </div>
+    </div>
+  );
+
+  // Main render logic
+  if (isCreateMode) {
+    return renderWriteView();
+  }
+
+  return (
+    <div
+      className={`min-h-screen ${
+        isDarkMode
+          ? "bg-gray-900"
+          : "bg-gradient-to-br from-[#caf0f8] to-[#ade8f4]"
+      } transition-colors duration-300`}
+    >
+      <div className="max-w-6xl mx-auto p-6">
+        {/* Header */}
+        <div
+          className={`${themeClasses.primary} rounded-xl p-6 mb-6 shadow-lg border ${themeClasses.border}`}
+        >
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Journal Dashboard</h1>
+              <p className="text-gray-500">
+                Express yourself, connect with others, and track your thoughts
+              </p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-lg ${themeClasses.button} transition-colors`}
+                title={
+                  isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+                }
+              >
+                {isDarkMode ? "☀️" : "🌙"}
+              </button>
+              <button
+                onClick={() => {
+                  setIsCreateMode(true);
+                  setCurrentView("write");
+                }}
+                className="px-6 py-3 bg-[#0077b6] text-white rounded-lg hover:bg-[#0096c7] transition-colors flex items-center space-x-2 shadow-lg"
+              >
+                <span>✨</span>
+                <span>Write Journal</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div
+          className={`${themeClasses.primary} rounded-xl p-1 mb-6 shadow-lg border ${themeClasses.border}`}
+        >
+          <div className="flex space-x-1">
+            {[
+              { id: "my-journals", label: "My Journals", icon: "📝" },
+              { id: "community", label: "Community", icon: "🌟" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setCurrentView(tab.id)}
+                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center space-x-2 ${
+                  currentView === tab.id
+                    ? "bg-[#0077b6] text-white shadow-md"
+                    : `${themeClasses.button} hover:bg-[#90e0ef]/20`
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div
+            className={`${themeClasses.primary} rounded-xl shadow-lg p-6 text-center border ${themeClasses.border}`}
+          >
+            <div className="text-2xl mb-2">📝</div>
+            <div className="text-2xl font-bold text-[#0077b6]">
+              {journalEntries.length}
+            </div>
+            <div className="text-sm text-gray-500">Total Entries</div>
+          </div>
+          <div
+            className={`${themeClasses.primary} rounded-xl shadow-lg p-6 text-center border ${themeClasses.border}`}
+          >
+            <div className="text-2xl mb-2">📄</div>
+            <div className="text-2xl font-bold text-[#0077b6]">
+              {savedDrafts.length}
+            </div>
+            <div className="text-sm text-gray-500">Drafts</div>
+          </div>
+          <div
+            className={`${themeClasses.primary} rounded-xl shadow-lg p-6 text-center border ${themeClasses.border}`}
+          >
+            <div className="text-2xl mb-2">❤️</div>
+            <div className="text-2xl font-bold text-[#0077b6]">
+              {Object.values(likes).reduce(
+                (sum, like) => sum + (like.liked ? 1 : 0),
+                0
+              )}
+            </div>
+            <div className="text-sm text-gray-500">Likes Given</div>
+          </div>
+          <div
+            className={`${themeClasses.primary} rounded-xl shadow-lg p-6 text-center border ${themeClasses.border}`}
+          >
+            <div className="text-2xl mb-2">💬</div>
+            <div className="text-2xl font-bold text-[#0077b6]">
+              {Object.values(comments).reduce(
+                (sum, commentList) => sum + commentList.length,
+                0
+              )}
+            </div>
+            <div className="text-sm text-gray-500">Comments</div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        {currentView === "my-journals" && renderMyJournalsView()}
+        {currentView === "community" && renderCommunityView()}
       </div>
     </div>
   );
