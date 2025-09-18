@@ -35,9 +35,22 @@ const Chatbot = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-white rounded-lg shadow-2xl border border-gray-200 z-50 flex flex-col">
+    <div className="fixed bottom-24 right-6 w-96 h-[500px] rounded-lg shadow-2xl border border-gray-200 z-50 flex flex-col overflow-hidden">
+      {/* Video Background */}
+      <video
+        autoPlay
+        loop
+        muted
+        className="absolute inset-0 w-full h-full object-cover z-0"
+      >
+        <source src="/Gradient-background.mp4" type="video/mp4" />
+      </video>
+
+      {/* Overlay for better readability */}
+      <div className="absolute inset-0 bg-black/20 z-10"></div>
+
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
+      <div className="relative z-20 p-4 border-b border-white/20 bg-black/30 backdrop-blur-sm text-white rounded-t-lg">
         <div className="flex justify-between items-center">
           <div>
             <h3 className="font-semibold">MindConnect AI Assistant</h3>
@@ -65,7 +78,7 @@ const Chatbot = ({ isOpen, onClose }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-100 space-y-3">
+      <div className="relative z-20 flex-1 overflow-y-auto p-4 space-y-3 bg-transparent backdrop-blur-sm">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -74,12 +87,12 @@ const Chatbot = ({ isOpen, onClose }) => {
             }`}
           >
             <div
-              className={`max-w-[80%] rounded-xl p-4 text-sm shadow-md ${
+              className={`max-w-[80%] rounded-xl p-4 text-sm shadow-lg border ${
                 message.type === "user"
-                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white ml-4 shadow-indigo-200"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-700 text-white ml-4 shadow-indigo-300 border-indigo-400"
                   : message.type === "error"
-                  ? "bg-gradient-to-r from-red-50 to-red-100 text-red-800 border border-red-200 shadow-red-100"
-                  : "bg-gradient-to-r from-white to-gray-50 text-gray-800 shadow-lg border border-gray-100"
+                  ? "bg-gradient-to-r from-red-100 to-red-200 text-red-900 border-red-300 shadow-red-200 backdrop-blur-sm"
+                  : "bg-white/90 text-gray-800 shadow-xl border-gray-200 backdrop-blur-sm"
               }`}
             >
               <p className="whitespace-pre-wrap font-medium leading-relaxed">
@@ -98,7 +111,7 @@ const Chatbot = ({ isOpen, onClose }) => {
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white rounded-lg p-3 shadow-sm border max-w-[80%]">
+            <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-200 max-w-[80%]">
               <div className="flex items-center space-x-2">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce"></div>
@@ -122,15 +135,15 @@ const Chatbot = ({ isOpen, onClose }) => {
 
       {/* Quick Actions */}
       {messages.length <= 2 && (
-        <div className="px-4 py-2 border-t border-gray-200 bg-gray-50">
-          <p className="text-xs text-gray-600 mb-2">Quick actions:</p>
+        <div className="relative z-20 px-4 py-2 border-t border-white/20 bg-white/20 backdrop-blur-sm">
+          <p className="text-xs text-white mb-2 font-medium">Quick actions:</p>
           <div className="flex flex-wrap gap-1">
             {getQuickActions().map((action, index) => (
               <button
                 key={index}
                 onClick={() => handleQuickAction(action)}
                 disabled={isLoading}
-                className="px-2 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors disabled:opacity-50"
+                className="px-2 py-1 text-xs bg-white/80 text-indigo-700 rounded-full hover:bg-white/90 transition-colors disabled:opacity-50 backdrop-blur-sm border border-white/30"
               >
                 {action}
               </button>
@@ -140,7 +153,7 @@ const Chatbot = ({ isOpen, onClose }) => {
       )}
 
       {/* Input Area */}
-      <div className="p-4 border-t border-gray-200 bg-white rounded-b-lg">
+      <div className="relative z-20 p-4 border-t border-white/20 bg-white/20 backdrop-blur-sm rounded-b-lg">
         <form onSubmit={handleSubmit} className="flex space-x-2">
           <input
             type="text"
@@ -148,18 +161,22 @@ const Chatbot = ({ isOpen, onClose }) => {
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Type your message..."
             disabled={isLoading}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm disabled:opacity-50"
+            className="flex-1 px-3 py-2 border border-white/30 bg-white/90 backdrop-blur-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white text-sm disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
-            className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-lg"
           >
             {isLoading ? "..." : "Send"}
           </button>
         </form>
 
-        {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
+        {error && (
+          <p className="text-xs text-red-200 mt-2 font-medium bg-red-900/30 backdrop-blur-sm p-2 rounded">
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );

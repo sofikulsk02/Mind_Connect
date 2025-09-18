@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { getCurrentUser } from "../utils/auth";
+import { getUserProfile } from "../utils/profileAPI";
 
 const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
   const [notifications] = useState([
@@ -20,12 +22,52 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
       time: "3 hours ago",
       unread: false,
     },
+    {
+      id: 4,
+      message: "Weekly mood summary ready",
+      time: "1 day ago",
+      unread: false,
+    },
   ]);
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showPersonalMenu, setShowPersonalMenu] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const dropdownRef = useRef(null);
-  const userName = "Sofikul";
+
+  // Load user profile data
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setProfileLoading(true);
+        const currentUser = getCurrentUser();
+
+        if (currentUser) {
+          // Try to get updated profile from API
+          try {
+            const profileData = await getUserProfile();
+            setUserProfile(profileData.user);
+          } catch (apiError) {
+            // Fallback to localStorage user data if API fails
+            setUserProfile(currentUser);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  const userName =
+    userProfile?.name ||
+    userProfile?.username ||
+    userProfile?.fullName ||
+    "User";
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
@@ -58,12 +100,9 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
     <div className="shadow-sm border-b border-gray-100 bg-[#00b4d8] px-4 py-4 sticky top-0 z-50">
       <div className="flex justify-around items-center w-full">
         {/* logo */}
-        <div>
-          <img
-            src="../../public/ChatGPT_Image_Aug_30__2025__11_28_55_PM-removebg-preview.png"
-            className="h-10 w-30"
-            alt=""
-          />
+        <div className="flex flex-col font-extrabold text-black leading-none">
+          <span className="ml-2"> Mind</span>
+          <span>connect</span>
         </div>
         {/* Navigation Tabs Section */}
         <div className="flex items-center justify-evenly gap-4 flex-1 max-w-4xl">
@@ -314,13 +353,26 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
           </div>
           {/* Profile */}
           <div className="flex items-center space-x-3">
+            {userProfile?.profilePicture ? (
+              <img
+                src={`http://localhost:3000${userProfile.profilePicture}`}
+                alt="Profile"
+                className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                onError={(e) => {
+                  // If image fails to load, hide it and show initials instead
+                  e.target.style.display = "none";
+                  e.target.nextSibling.style.display = "flex";
+                }}
+              />
+            ) : null}
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold shadow-sm"
               style={{
                 background: "linear-gradient(135deg, #0077b6 0%, #48cae4 100%)",
+                display: userProfile?.profilePicture ? "none" : "flex",
               }}
             >
-              {userName.charAt(0)}
+              {userName.charAt(0).toUpperCase()}
             </div>
           </div>
 

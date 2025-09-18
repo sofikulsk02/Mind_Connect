@@ -215,30 +215,52 @@ const Journal = () => {
       },
     ];
 
+    // Helper function to format journal entries from backend
+    const formatJournalEntry = (entry) => {
+      return {
+        ...entry,
+        id: entry._id || entry.id,
+        date: entry.createdAt || entry.date || new Date().toISOString(),
+        author: {
+          name: entry.authorName || entry.author?.name || "Anonymous",
+          avatar: entry.author?.avatar || "👤",
+          id: entry.author?._id || entry.author?.id || entry.author,
+        },
+        wordCount:
+          entry.wordCount ||
+          (entry.content ? entry.content.trim().split(/\s+/).length : 0),
+        tags: entry.tags || [],
+        privacy: entry.privacy || "private",
+      };
+    };
+
     const initializeData = async () => {
       try {
         // Load user's journals
         const userJournalsResponse = await journalAPI.getUserJournals();
-        setJournalEntries(userJournalsResponse.data || []);
+        const userJournals = (userJournalsResponse.data || []).map(
+          formatJournalEntry
+        );
+        setJournalEntries(userJournals);
 
         // Load community journals
         const communityResponse = await journalAPI.getCommunityJournals();
-        setCommunityEntries(communityResponse.data || []);
+        const communityJournals = (communityResponse.data || []).map(
+          formatJournalEntry
+        );
+        setCommunityEntries(communityJournals);
 
         // Initialize likes and comments state
-        const allEntries = [
-          ...(userJournalsResponse.data || []),
-          ...(communityResponse.data || []),
-        ];
+        const allEntries = [...userJournals, ...communityJournals];
         const likesData = {};
         const commentsData = {};
 
         allEntries.forEach((entry) => {
-          likesData[entry._id || entry.id] = {
+          likesData[entry.id] = {
             count: entry.likeCount || entry.likes?.length || 0,
             liked: entry.isLikedBy?.(currentUser.id) || false,
           };
-          commentsData[entry._id || entry.id] = entry.comments || [];
+          commentsData[entry.id] = entry.comments || [];
         });
 
         setLikes(likesData);
@@ -402,18 +424,36 @@ const Journal = () => {
 
       try {
         const response = await journalAPI.createJournal(journalData);
-        const newJournalEntry = response.data;
+
+        // Handle the nested response structure from backend
+        const newJournalEntry = response.data || response;
+
+        // Ensure the entry has proper structure for frontend display
+        const formattedEntry = {
+          ...newJournalEntry,
+          id: newJournalEntry._id || newJournalEntry.id,
+          date:
+            newJournalEntry.createdAt ||
+            newJournalEntry.date ||
+            new Date().toISOString(),
+          author: {
+            name: newJournalEntry.authorName || currentUser.name,
+            avatar: currentUser.avatar,
+            id: newJournalEntry.author || currentUser.id,
+          },
+          wordCount: newEntry.trim().split(/\s+/).length,
+        };
 
         // Update local state
-        setJournalEntries((prev) => [newJournalEntry, ...prev]);
+        setJournalEntries((prev) => [formattedEntry, ...prev]);
 
         // If public, also add to community entries
         if (privacySetting === "public") {
-          setCommunityEntries((prev) => [newJournalEntry, ...prev]);
+          setCommunityEntries((prev) => [formattedEntry, ...prev]);
         }
 
         // Initialize likes and comments for new entry
-        const entryId = newJournalEntry._id || newJournalEntry.id;
+        const entryId = formattedEntry.id;
         setLikes((prev) => ({
           ...prev,
           [entryId]: { count: 0, liked: false },
@@ -533,11 +573,15 @@ const Journal = () => {
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-3">
-            <div className="text-2xl">{entry.author.avatar}</div>
+            <div className="text-2xl">{entry.author?.avatar || "👤"}</div>
             <div>
-              <h3 className="font-semibold">{entry.author.name}</h3>
+              <h3 className="font-semibold">
+                {entry.author?.name || "Anonymous"}
+              </h3>
               <p className="text-sm text-gray-500">
-                {entry.date.toLocaleDateString()}
+                {entry.date
+                  ? new Date(entry.date).toLocaleDateString()
+                  : new Date().toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -551,7 +595,7 @@ const Journal = () => {
                   : "bg-gray-100 text-gray-700"
               }`}
             >
-              {entry.privacy}
+              {entry.privacy || "private"}
             </span>
             {entry.isDraft && (
               <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
@@ -561,12 +605,12 @@ const Journal = () => {
           </div>
         </div>
 
-        <h2 className="text-xl font-bold mb-3">{entry.title}</h2>
+        <h2 className="text-xl font-bold mb-3">{entry.title || "Untitled"}</h2>
 
         <div className="flex flex-wrap gap-2 mb-3">
-          {entry.tags.map((tag) => (
+          {(entry.tags || []).map((tag, index) => (
             <span
-              key={tag}
+              key={`${tag}-${index}`}
               className="px-2 py-1 rounded-full text-xs bg-[#90e0ef]/20 text-[#0077b6]"
             >
               {tag}
@@ -574,12 +618,12 @@ const Journal = () => {
           ))}
         </div>
 
-        <p className="text-gray-600 mb-4 line-clamp-3">{entry.content}</p>
+        <p className="text-gray-600 mb-4 line-clamp-3">{entry.content || ""}</p>
 
         <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
           <span>
-            {entry.wordCount} words • {Math.ceil(entry.wordCount / 200)} min
-            read
+            {entry.wordCount || 0} words •{" "}
+            {Math.ceil((entry.wordCount || 0) / 200)} min read
           </span>
         </div>
 

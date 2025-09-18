@@ -4,6 +4,49 @@ const Home = () => {
   const [selectedMood, setSelectedMood] = useState(null);
   const [energyLevel, setEnergyLevel] = useState(null);
   const [userName] = useState("Alex"); // This would come from user context
+  const [isSubmittingMood, setIsSubmittingMood] = useState(false);
+  const [todayCheckin, setTodayCheckin] = useState(null);
+
+  // Handle mood and energy submission
+  const handleCheckinSubmit = async () => {
+    if (!selectedMood || !energyLevel) return;
+
+    setIsSubmittingMood(true);
+    try {
+      // Simulate API call to save mood data
+      const checkinData = {
+        mood: selectedMood,
+        energy: energyLevel,
+        date: new Date().toISOString().split("T")[0],
+        timestamp: new Date().toISOString(),
+      };
+
+      // Store in localStorage (in real app, this would be API call)
+      localStorage.setItem("todayCheckin", JSON.stringify(checkinData));
+      setTodayCheckin(checkinData);
+
+      // Show success message
+      alert("Daily check-in saved! 🎉");
+    } catch (error) {
+      console.error("Error saving check-in:", error);
+    } finally {
+      setIsSubmittingMood(false);
+    }
+  };
+
+  // Load today's check-in on component mount
+  React.useEffect(() => {
+    const saved = localStorage.getItem("todayCheckin");
+    if (saved) {
+      const data = JSON.parse(saved);
+      const today = new Date().toISOString().split("T")[0];
+      if (data.date === today) {
+        setTodayCheckin(data);
+        setSelectedMood(data.mood);
+        setEnergyLevel(data.energy);
+      }
+    }
+  }, []);
 
   // Function to get time-based greeting
   const getTimeBasedGreeting = () => {
@@ -69,13 +112,42 @@ const Home = () => {
     {
       icon: "✍️",
       text: "Try journaling for 5 mins on gratitude",
-      action: "journal",
+      action: () => {
+        if (confirm("Would you like to start a gratitude journal entry?")) {
+          alert("Redirecting to journal with gratitude template...");
+          // In real app: navigate to journal with template
+        }
+      },
     },
-    { icon: "🚶‍♀️", text: "Take a short walk for clarity", action: "walk" },
+    {
+      icon: "🚶‍♀️",
+      text: "Take a short walk for clarity",
+      action: () => {
+        if (confirm("Ready for a 10-minute mindful walk?")) {
+          alert("Starting walk timer with mindfulness prompts...");
+          // In real app: start walk timer/tracker
+        }
+      },
+    },
     {
       icon: "📚",
       text: "Read a new resource on anxiety management",
-      action: "resource",
+      action: () => {
+        if (confirm("Explore anxiety management resources?")) {
+          alert("Opening curated anxiety resources...");
+          // In real app: navigate to resources section
+        }
+      },
+    },
+    {
+      icon: "🧘‍♀️",
+      text: "Try a 5-minute breathing exercise",
+      action: () => {
+        if (confirm("Start guided breathing session?")) {
+          alert("Starting breathing exercise...");
+          // In real app: start breathing exercise
+        }
+      },
     },
   ];
 
@@ -83,15 +155,42 @@ const Home = () => {
     {
       icon: "📝",
       title: "Journal Entry",
-      preview: "Feeling calm after the walk...",
+      preview: "Feeling calm after the morning walk...",
       time: "2 hours ago",
+      type: "journal",
+      action: () => alert("Opening journal entry..."),
     },
-    { icon: "😊", title: "Mood Log", preview: "Happy", time: "3 days ago" },
+    {
+      icon: "🎥",
+      title: "Wellness Video",
+      preview: "10-Minute Morning Meditation",
+      time: "Yesterday",
+      type: "video",
+      action: () => alert("Resuming video..."),
+    },
+    {
+      icon: "📚",
+      title: "Reading Progress",
+      preview: '"The Power of Now" - Chapter 3',
+      time: "3 days ago",
+      type: "reading",
+      action: () => alert("Continue reading..."),
+    },
     {
       icon: "🎯",
-      title: "Goal Progress",
-      preview: '"Read 10 pages" ✓ completed',
+      title: "Goal Completed",
+      preview: '"Drink 8 glasses of water" ✓',
       time: "Yesterday",
+      type: "goal",
+      action: () => alert("View goal details..."),
+    },
+    {
+      icon: "😊",
+      title: "Mood Check-in",
+      preview: selectedMood ? `Today: ${selectedMood}` : "Happy - 3 days ago",
+      time: selectedMood ? "Today" : "3 days ago",
+      type: "mood",
+      action: () => alert("View mood history..."),
     },
   ];
 
@@ -120,58 +219,132 @@ const Home = () => {
     <div className="w-full max-w-none px-4 space-y-6">
       {/* AI Companion Greeting & Daily Affirmation */}
       <div className="flex justify-between flex-col">
-        <div className="flex justify-between">
-          <div
-            className={`h-100 w-300 bg-gradient-to-r ${timeGreeting.background} rounded-xl p-6 shadow-lg border-l-4 border-[#0077b6] flex flex-col justify-center`}
-          >
-            <div className="flex items-center gap-4 mb-3">
-              <span className="text-6xl">{timeGreeting.emoji}</span>
+        <div className="flex justify-between items-start gap-4">
+          {/* Main Greeting & Daily Affirmation Section */}
+          <div className="h-98 w-[85%] bg-gradient-to-br from-[#caf0f8]/30 via-[#ade8f4]/20 to-[#90e0ef]/30 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-[#0077b6]/20">
+            {/* Time-based Greeting Header */}
+            <div className="flex items-center gap-6 mb-6">
+              <span className="text-7xl drop-shadow-lg">
+                {timeGreeting.emoji}
+              </span>
               <div>
-                <h1
-                  className="text-5xl font-bold leading-tight"
-                  style={{ color: timeGreeting.textColor }}
-                >
-                  {timeGreeting.greeting}
+                <h1 className="text-4xl font-bold leading-tight text-gray-800">
+                  {timeGreeting.greeting}, {userName}!
                 </h1>
-                <h2
-                  className="text-4xl font-bold"
-                  style={{ color: timeGreeting.subTextColor }}
-                >
-                  {userName}!
-                </h2>
+                <p className="text-lg text-gray-600 mt-1">
+                  {timeGreeting.message}
+                </p>
               </div>
             </div>
-            <p
-              className="text-2xl font-medium text-center"
-              style={{ color: timeGreeting.textColor }}
-            >
-              {timeGreeting.message}
-            </p>
+
+            {/* Daily Affirmation Section */}
+            <div className="bg-gradient-to-r from-[#caf0f8] to-[#ade8f4] rounded-xl p-6 shadow-lg border-l-4 border-[#0077b6]">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">💭</span>
+                <h3 className="text-lg font-semibold text-[#0077b6]">
+                  Daily Affirmation
+                </h3>
+              </div>
+              <p className="text-gray-800 font-medium text-lg leading-relaxed">
+                {dailyAffirmation}
+              </p>
+            </div>
           </div>
-          <button
-            className="h-10  w-40 rounded-3xl text-white"
-            style={{
-              background: "linear-gradient(135deg, #0077b6 0%, #00b4d8 100%)",
-            }}
-          >
-            21 days challenge
-          </button>
-        </div>
-        <div
-          className="rounded-xl p-6 text-white w-[70%] bg-[#009BCA]"
-          // style={{
-          //   backgroundColor: "rgba(0, 180, 216, 0.15)",
-          // }}
-        >
-          <h2
-            className="text-2xl font-bold mb-2 font-pacifico text-black"
-            // style={{ color: "#0077b6" }}
-          >
-            👋 Good Morning, {userName}!
-          </h2>
-          <div className="bg-[#90E0EF] rounded-lg p-4">
-            <p className="text-black text-sm mb-2">💭 Daily Affirmation</p>
-            <p className="text-black font-bold">{dailyAffirmation}</p>
+
+          <div className="flex flex-col">
+            {/* 21 Days Challenge Button */}
+            <button
+              className="h-14 w-64 mb-2 rounded-2xl text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              style={{
+                background: "linear-gradient(135deg, #0077b6 0%, #00b4d8 100%)",
+              }}
+            >
+              🎯 21 Days Challenge
+            </button>
+
+            {/* Mini Calendar */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-[#0077b6]/20 w-64">
+              {/* Calendar Header */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-[#0077b6]">
+                  {new Date().toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </h3>
+                <span className="text-2xl">📅</span>
+              </div>
+
+              {/* Days of the week */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                  <div
+                    key={index}
+                    className="text-center text-xs font-semibold text-gray-500 py-1"
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {(() => {
+                  const today = new Date();
+                  const currentMonth = today.getMonth();
+                  const currentYear = today.getFullYear();
+                  const firstDay = new Date(currentYear, currentMonth, 1);
+                  const lastDay = new Date(currentYear, currentMonth + 1, 0);
+                  const startDate = firstDay.getDay();
+                  const daysInMonth = lastDay.getDate();
+                  const todayDate = today.getDate();
+
+                  const days = [];
+
+                  // Empty cells for days before the first day of the month
+                  for (let i = 0; i < startDate; i++) {
+                    days.push(
+                      <div key={`empty-${i}`} className="h-8 w-8"></div>
+                    );
+                  }
+
+                  // Days of the current month
+                  for (let day = 1; day <= daysInMonth; day++) {
+                    const isToday = day === todayDate;
+                    const isActive = day <= todayDate; // Mark past and current days as active
+
+                    days.push(
+                      <div
+                        key={day}
+                        className={`h-8 w-8 flex items-center justify-center text-xs font-medium rounded-lg cursor-pointer transition-all duration-200 ${
+                          isToday
+                            ? "bg-gradient-to-r from-[#0077b6] to-[#00b4d8] text-white shadow-lg transform scale-110"
+                            : isActive
+                            ? "bg-[#caf0f8] text-[#0077b6] hover:bg-[#ade8f4]"
+                            : "text-gray-400 hover:bg-gray-100"
+                        }`}
+                      >
+                        {day}
+                      </div>
+                    );
+                  }
+
+                  return days;
+                })()}
+              </div>
+
+              {/* Today's highlight */}
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="flex items-center justify-center text-xs text-[#0077b6] font-medium">
+                  <span className="mr-1">✨</span>
+                  Today:{" "}
+                  {new Date().toLocaleDateString("en-US", {
+                    weekday: "long",
+                    day: "numeric",
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -179,98 +352,128 @@ const Home = () => {
       {/* Quick Check-in Tiles */}
       <div className="flex justify-between">
         <div
-          className="rounded-xl shadow-lg p-6  w-[70%]"
+          className="rounded-xl shadow-lg p-6 w-[70%]"
           style={{ backgroundColor: "rgba(0, 180, 216, 0.15)" }}
         >
-          <h3 className="text-lg font-semibold text-[#333333] mb-4">
-            How are you today?
-          </h3>
-          <div
-            className="grid grid-cols-3 gap-3 mb-4"
-            style={{ backgroundColor: "#ade8f4" }}
-          >
-            {quickMoodOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setSelectedMood(option.value)}
-                className={`flex flex-col items-center p-4 rounded-lg border-1 transition-all duration-200 wellness-transition wellness-hover `}
-                style={
-                  selectedMood === option.value
-                    ? {
-                        backgroundColor: "var(--light-blue)",
-                        opacity: 0.5,
-                      }
-                    : {}
-                }
-              >
-                <span className="text-2xl mb-1">{option.emoji}</span>
-                <span className="text-sm font-medium text-[#333333]">
-                  {option.label}
-                </span>
-              </button>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-[#333333]">
+              How are you today?
+            </h3>
+            {todayCheckin && (
+              <span className="text-sm text-green-600 font-medium">
+                ✓ Checked in today
+              </span>
+            )}
           </div>
 
-          <h4 className="text-md font-medium text-[#333333] mb-3">
-            What's your energy level?
-          </h4>
-          <div className="grid grid-cols-3 gap-3">
-            {energyOptions.map((option) => (
+          <div className="bg-white/50 rounded-lg p-4 mb-4">
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {quickMoodOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setSelectedMood(option.value)}
+                  className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                    selectedMood === option.value
+                      ? "border-[#0077b6] bg-[#caf0f8] shadow-md"
+                      : "border-gray-200 bg-white hover:border-[#90e0ef]"
+                  }`}
+                >
+                  <span className="text-2xl mb-1">{option.emoji}</span>
+                  <span className="text-sm font-medium text-[#333333]">
+                    {option.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <h4 className="text-md font-medium text-[#333333] mb-3">
+              What's your energy level?
+            </h4>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {energyOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setEnergyLevel(option.value)}
+                  className="px-4 py-2 rounded-lg border-2 transition-all duration-200 font-medium hover:scale-105"
+                  style={
+                    energyLevel === option.value
+                      ? {
+                          backgroundColor: "#0077b6",
+                          color: "white",
+                          borderColor: "#0077b6",
+                        }
+                      : {
+                          backgroundColor: "white",
+                          color: "#333333",
+                          borderColor: "#ade8f4",
+                        }
+                  }
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Submit Button */}
+            {selectedMood && energyLevel && !todayCheckin && (
               <button
-                key={option.value}
-                onClick={() => setEnergyLevel(option.value)}
-                className={`px-4 py-2 rounded-lg border-2 transition-all duration-200 wellness-transition `}
-                style={
-                  energyLevel === option.value
-                    ? {
-                        backgroundColor: "#0077b6",
-                        color: "white",
-                      }
-                    : {
-                        backgroundColor: "#ade8f4",
-                        color: "#333333",
-                      }
-                }
+                onClick={handleCheckinSubmit}
+                disabled={isSubmittingMood}
+                className="w-full bg-gradient-to-r from-[#0077b6] to-[#00b4d8] text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50"
               >
-                <span className="font-medium">{option.label}</span>
+                {isSubmittingMood ? "Saving..." : "Save Daily Check-in ✨"}
               </button>
-            ))}
+            )}
           </div>
         </div>
-        {/* the image where svg or the calendar will be there */}
-        <div className="h-[10%] w-[20%]">
+
+        {/* Wellness Illustration */}
+        <div className="w-[25%] flex items-center justify-center">
           <img
-            src="../../../public/dd7cc2c74b8c148c3f750ec939172aa5.png"
+            src="../../../public/0d2bf5366686736189026e2a8382789c.png"
             alt=""
-            className="h-[100%] object-cover w-[100%] ml-[-150px]"
           />
         </div>
       </div>
 
       {/* AI Suggestions */}
       <div
-        className="rounded-xl shadow-lg p-6 relative"
+        className="rounded-xl shadow-lg p-6 relative overflow-hidden"
         style={{ backgroundColor: "rgba(145, 181, 0, 0.15)" }}
       >
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          🌟 AI Suggestions for You
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">
+            🌟 AI Suggestions for You
+          </h3>
+          <span className="text-xs text-gray-600 bg-white/50 px-2 py-1 rounded-full">
+            Personalized
+          </span>
+        </div>
+
         <div className="space-y-3">
           {aiSuggestions.map((suggestion, index) => (
-            <div
+            <button
               key={index}
-              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              onClick={suggestion.action}
+              className="w-full flex items-center space-x-3 p-4 rounded-lg hover:bg-white/70 transition-all duration-200 cursor-pointer border border-transparent hover:border-[#90e0ef] hover:shadow-md group"
               style={{ backgroundColor: "#ade8f4" }}
             >
-              <span className="text-xl">{suggestion.icon}</span>
-              <p className="text-gray-700">{suggestion.text}</p>
-            </div>
+              <span className="text-xl group-hover:scale-110 transition-transform">
+                {suggestion.icon}
+              </span>
+              <p className="text-gray-700 font-medium flex-1 text-left">
+                {suggestion.text}
+              </p>
+              <span className="text-[#0077b6] opacity-0 group-hover:opacity-100 transition-opacity">
+                →
+              </span>
+            </button>
           ))}
         </div>
 
-        {/* the grreen grass starts */}
-        <div></div>
-        {/* the green grass end */}
+        {/* Decorative grass background */}
+        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-green-100 to-transparent opacity-30"></div>
+        <div className="absolute bottom-2 left-4 text-green-500 opacity-40"></div>
       </div>
 
       {/* Mini Wellness Dashboard */}
@@ -310,27 +513,74 @@ const Home = () => {
         className="rounded-xl shadow-lg p-6"
         style={{ backgroundColor: "rgba(0, 180, 216, 0.15)" }}
       >
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Recent Activity
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">
+            Recent Activity
+          </h3>
+          <button
+            className="text-sm text-[#0077b6] hover:text-[#00b4d8] font-medium"
+            onClick={() => alert("View all activities...")}
+          >
+            View All →
+          </button>
+        </div>
+
         <div className="space-y-3">
           {recentActivity.map((activity, index) => (
-            <div
+            <button
               key={index}
-              className="flex items-start space-x-3 p-3 rounded-lg"
+              onClick={activity.action}
+              className="w-full flex items-start space-x-3 p-4 rounded-lg hover:bg-white/70 transition-all duration-200 cursor-pointer border border-transparent hover:border-[#90e0ef] hover:shadow-sm group text-left"
               style={{ backgroundColor: "#ade8f4" }}
             >
-              <span className="text-lg">{activity.icon}</span>
-              <div className="flex-1">
-                <p className="font-medium text-gray-800 text-sm">
-                  {activity.title}
+              <span className="text-lg group-hover:scale-110 transition-transform">
+                {activity.icon}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-gray-800 text-sm truncate">
+                    {activity.title}
+                  </p>
+                  <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                    {activity.time}
+                  </span>
+                </div>
+                <p className="text-gray-600 text-xs mt-1 truncate">
+                  {activity.preview}
                 </p>
-                <p className="text-gray-600 text-xs">{activity.preview}</p>
-                <p className="text-gray-500 text-xs">{activity.time}</p>
+                <div className="flex items-center mt-2">
+                  <span
+                    className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                      activity.type === "journal"
+                        ? "bg-blue-400"
+                        : activity.type === "video"
+                        ? "bg-red-400"
+                        : activity.type === "reading"
+                        ? "bg-green-400"
+                        : activity.type === "goal"
+                        ? "bg-yellow-400"
+                        : "bg-purple-400"
+                    }`}
+                  ></span>
+                  <span className="text-xs text-gray-500 capitalize">
+                    {activity.type}
+                  </span>
+                </div>
               </div>
-            </div>
+              <span className="text-[#0077b6] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                →
+              </span>
+            </button>
           ))}
         </div>
+
+        {/* Quick action to add new activity */}
+        <button
+          className="w-full mt-4 p-3 border-2 border-dashed border-[#90e0ef] rounded-lg text-[#0077b6] hover:bg-white/50 transition-all duration-200"
+          onClick={() => alert("Add new activity...")}
+        >
+          + Add New Activity
+        </button>
       </div>
 
       {/* Quick Action Shortcuts */}
