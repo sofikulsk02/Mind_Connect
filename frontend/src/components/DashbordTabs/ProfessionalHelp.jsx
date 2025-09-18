@@ -6,6 +6,28 @@ const ProfessionalHelp = () => {
 
   const professionals = [
     {
+      id: 0,
+      name: "PW Prerna",
+      title: "FREE Student Counseling Platform",
+      specialties: [
+        "Exam Stress",
+        "Anxiety Management",
+        "Student Support",
+        "Academic Pressure",
+      ],
+      rating: 4.9,
+      reviews: 1250,
+      location: "Teleconsultation + Kota & Patna Centers",
+      phone: "+91 9990500122",
+      email: "support@pwprerna.com",
+      bio: "FREE teleconsultation platform specifically designed for students. Our qualified counselors help students overcome exam stress, anxiety, and academic pressure with proven strategies.",
+      availability: "Mon-Sat 10AM-9PM (Free Service)",
+      category: "featured",
+      image: "🎓",
+      featured: true,
+      free: true,
+    },
+    {
       id: 1,
       name: "Dr. Sarah Johnson",
       title: "Licensed Clinical Psychologist",
@@ -153,6 +175,48 @@ const ProfessionalHelp = () => {
         </p>
       </div>
 
+      {/* PW Prerna Banner */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-8 mb-8 text-white">
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold mb-2">PW PRERNA</h2>
+          <p className="text-xl font-semibold text-blue-100">
+            Supporting Your Journey To Emotional Wellness
+          </p>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur rounded-lg p-6 mb-6">
+          <p className="text-lg font-semibold mb-4 text-center">
+            Need support with your emotional well-being? Reach out to us on:
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            <div className="flex flex-col items-center">
+              <div className="text-3xl mb-2">📞</div>
+              <div className="text-2xl font-bold">+91 9990500122</div>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="text-3xl mb-2">📅</div>
+              <div className="text-lg font-semibold">Mon to Sat</div>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="text-3xl mb-2">🕒</div>
+              <div className="text-lg font-semibold">10:00 AM to 9:00 PM</div>
+              <div className="text-sm text-blue-100">
+                (Except on National Holidays)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold text-lg hover:bg-blue-50 transition-colors">
+            📞 Call Now: +91 9990500122
+          </button>
+        </div>
+      </div>
+
       {/* Emergency Contacts */}
       <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4 text-red-800">
@@ -176,6 +240,140 @@ const ProfessionalHelp = () => {
         </div>
       </div>
 
+      {/* PW Prerna Detailed Section */}
+      <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 mb-8 border border-purple-200">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-purple-800 mb-4">
+            Welcome to PW Prerna
+          </h2>
+          <div className="max-w-4xl mx-auto text-gray-700 leading-relaxed">
+            <p className="mb-4">
+              PW Prerna is a <strong>FREE teleconsultation platform</strong> for
+              students available from 10 am to 9 pm from Monday to Saturday. It
+              also provides in-person consultation at Kota & Patna centres. When
+              exam time approaches, students get overloaded with exam stress and
+              find it difficult to cope with anxiety & nervousness that follows.
+            </p>
+            <p className="mb-4">
+              PW Prerna aims to provide an accessible solution to help students
+              overcome these feelings of stress which may affect their
+              performance, during these times. The idea is to maximise student
+              results by making sure they don't lose focus towards building
+              strategies and confidence for the exam, rather than worrying about
+              managing their mental health.
+            </p>
+            <p className="mb-6">
+              Our qualified & experienced student counselors have a history of
+              helping students achieve their academic goals, with
+              <strong> FREE counseling sessions</strong>. They just need to call{" "}
+              <strong>+91 9990500122</strong> to receive support.
+            </p>
+          </div>
+        </div>
+
+        {/* Student Concerns */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-purple-800 mb-6 text-center">
+            Common Student Concerns We Address
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              "I'm nervous as my exams are getting closer.",
+              "I'm not able to manage my time.",
+              "I'm not able to focus on my studies.",
+              "I am getting pressured to perform well.",
+              "My exam did not go well hence I cannot focus on the upcoming one",
+              "I am not able to concentrate due to homesickness",
+              "I am feeling isolated",
+            ].map((concern, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-lg p-4 shadow-sm border border-purple-100"
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="text-purple-600 font-bold text-lg">💭</div>
+                  <p className="text-gray-700 text-sm">{concern}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* How PW Prerna Helps */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-purple-800 mb-6 text-center">
+            How Does PW Prerna Help?
+          </h3>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-purple-100 mb-6">
+            <p className="text-gray-700 mb-4">
+              PW Prerna Counselors are experienced in handling these obstacles
+              and will help you in every way possible to uplift your emotional
+              well-being & come out victorious!
+            </p>
+            <p className="text-gray-700">
+              The key to maintaining mental health is recognising pre-existing
+              problems and knowing how to tackle them. Here are common
+              circumstances that you, as a student may experience:
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              { icon: "😰", label: "Anxiety" },
+              { icon: "😨", label: "Panic" },
+              { icon: "📚", label: "Exam Fear / Stress" },
+              { icon: "🤔", label: "Self Doubt" },
+              { icon: "😢", label: "Sadness or Distress" },
+              { icon: "🌀", label: "Overthinking" },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-lg p-4 text-center shadow-sm border border-purple-100"
+              >
+                <div className="text-3xl mb-2">{item.icon}</div>
+                <p className="text-sm font-semibold text-gray-700">
+                  {item.label}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-purple-100 rounded-lg p-6 mt-6 text-center">
+            <p className="text-purple-800 font-semibold">
+              It is important to understand that all of these problems are
+              common and it is within you to overcome them and achieve your
+              goal. PW Experts will help you identify them, provide techniques
+              through which to manage them and encourage you to become better,
+              faster, safer.
+            </p>
+          </div>
+        </div>
+
+        {/* Contact CTA */}
+        <div className="text-center bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-6 text-white">
+          <h4 className="text-lg font-bold mb-4">
+            Need support with your emotional well-being? Reach out to us on:
+          </h4>
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-6">
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl">📞</span>
+              <span className="text-xl font-bold">+91 9990500122</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl">📅</span>
+              <span>Mon to Sat</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl">🕒</span>
+              <span>10:00 AM to 9:00 PM</span>
+            </div>
+          </div>
+          <p className="text-sm text-purple-100 mt-2">
+            (Except on National Holidays)
+          </p>
+        </div>
+      </div>
+
       {/* Search and Filter */}
       <div
         className="bg-white rounded-xl shadow-lg p-6 mb-8 border"
@@ -192,33 +390,48 @@ const ProfessionalHelp = () => {
               style={{ borderColor: "var(--light-blue)" }}
             />
           </div>
-          <div className="flex gap-2">
-            {["all", "psychologist", "psychiatrist", "therapist"].map(
-              (category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    selectedCategory === category ? "text-white" : "border"
-                  }`}
-                  style={
-                    selectedCategory === category
-                      ? {
-                          backgroundColor: "var(--primary-blue)",
-                        }
-                      : {
-                          borderColor: "var(--primary-blue)",
-                          color: "var(--primary-blue)",
-                          backgroundColor: "transparent",
-                        }
-                  }
-                >
-                  {category === "all"
-                    ? "All"
-                    : category.charAt(0).toUpperCase() + category.slice(1)}
-                </button>
-              )
-            )}
+          <div className="flex gap-2 flex-wrap">
+            {[
+              "all",
+              "featured",
+              "psychologist",
+              "psychiatrist",
+              "therapist",
+            ].map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  selectedCategory === category ? "text-white" : "border"
+                } ${category === "featured" ? "border-2" : ""}`}
+                style={
+                  selectedCategory === category
+                    ? {
+                        backgroundColor:
+                          category === "featured"
+                            ? "#7C3AED"
+                            : "var(--primary-blue)",
+                      }
+                    : {
+                        borderColor:
+                          category === "featured"
+                            ? "#7C3AED"
+                            : "var(--primary-blue)",
+                        color:
+                          category === "featured"
+                            ? "#7C3AED"
+                            : "var(--primary-blue)",
+                        backgroundColor: "transparent",
+                      }
+                }
+              >
+                {category === "all"
+                  ? "All"
+                  : category === "featured"
+                  ? "⭐ Featured"
+                  : category.charAt(0).toUpperCase() + category.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -235,9 +448,25 @@ const ProfessionalHelp = () => {
           {filteredProfessionals.map((prof) => (
             <div
               key={prof.id}
-              className="bg-white rounded-xl shadow-lg p-6 border hover:shadow-xl transition-shadow"
-              style={{ borderColor: "var(--light-blue)" }}
+              className={`rounded-xl shadow-lg p-6 border hover:shadow-xl transition-all duration-300 ${
+                prof.featured
+                  ? "bg-gradient-to-br from-purple-50 to-blue-50 border-purple-300 ring-2 ring-purple-200"
+                  : "bg-white"
+              }`}
+              style={!prof.featured ? { borderColor: "var(--light-blue)" } : {}}
             >
+              {prof.featured && (
+                <div className="flex justify-between items-center mb-4">
+                  <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold">
+                    ⭐ FEATURED
+                  </div>
+                  {prof.free && (
+                    <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                      💯 FREE
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="flex items-start gap-4 mb-4">
                 <div className="text-4xl">{prof.image}</div>
                 <div className="flex-1">

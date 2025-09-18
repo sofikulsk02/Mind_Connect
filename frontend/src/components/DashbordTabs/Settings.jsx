@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from "react";
+import {
+  getUserProfile,
+  updateUserProfile,
+  uploadProfilePicture,
+} from "../../utils/profileAPI";
 
 const Settings = ({ onLogout }) => {
   const [settings, setSettings] = useState({
     // Profile Settings
-    name: "John Doe",
-    email: "john.doe@email.com",
+    name: "",
+    email: "",
     profilePicture: "",
 
     // Privacy Settings
@@ -37,24 +42,137 @@ const Settings = ({ onLogout }) => {
 
   const [activeSection, setActiveSection] = useState("profile");
   const [unsavedChanges, setUnsavedChanges] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Load settings from localStorage or API
-    const savedSettings = localStorage.getItem("userSettings");
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
+    loadUserProfile();
   }, []);
+
+  const handleProfilePictureUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be less than 5MB");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const response = await uploadProfilePicture(file);
+
+      if (response.profilePicture) {
+        setSettings((prev) => ({
+          ...prev,
+          profilePicture: response.profilePicture,
+        }));
+        alert("Profile picture uploaded successfully!");
+      }
+    } catch (error) {
+      console.error("Failed to upload profile picture:", error);
+      alert("Failed to upload profile picture. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const loadUserProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await getUserProfile();
+
+      if (response.user) {
+        setSettings((prevSettings) => ({
+          ...prevSettings,
+          name: response.user.fullName || "",
+          email: response.user.email || "",
+          profilePicture: response.user.profilePicture || "",
+          profileVisibility: response.user.profileVisibility || "private",
+          shareProgress: response.user.shareProgress || false,
+          allowDataCollection:
+            response.user.allowDataCollection !== undefined
+              ? response.user.allowDataCollection
+              : true,
+          emailNotifications:
+            response.user.emailNotifications !== undefined
+              ? response.user.emailNotifications
+              : true,
+          pushNotifications:
+            response.user.pushNotifications !== undefined
+              ? response.user.pushNotifications
+              : true,
+          reminderNotifications:
+            response.user.reminderNotifications !== undefined
+              ? response.user.reminderNotifications
+              : true,
+          weeklyReports:
+            response.user.weeklyReports !== undefined
+              ? response.user.weeklyReports
+              : true,
+          theme: response.user.theme || "wellness",
+          language: response.user.language || "English",
+          timeFormat: response.user.timeFormat || "12h",
+          startOfWeek: response.user.startOfWeek || "monday",
+          moodReminderTime: response.user.moodReminderTime || "20:00",
+          journalReminderTime: response.user.journalReminderTime || "21:00",
+          dailyGoals: response.user.dailyGoals || 3,
+          twoFactorAuth: response.user.twoFactorAuth || false,
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to load user profile:", error);
+      // Keep default values if loading fails
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSettingChange = (key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
     setUnsavedChanges(true);
   };
 
-  const handleSave = () => {
-    localStorage.setItem("userSettings", JSON.stringify(settings));
-    setUnsavedChanges(false);
-    alert("Settings saved successfully!");
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      // Prepare data for backend (exclude email from updates for security)
+      const updateData = {
+        fullName: settings.name,
+        profileVisibility: settings.profileVisibility,
+        shareProgress: settings.shareProgress,
+        allowDataCollection: settings.allowDataCollection,
+        emailNotifications: settings.emailNotifications,
+        pushNotifications: settings.pushNotifications,
+        reminderNotifications: settings.reminderNotifications,
+        weeklyReports: settings.weeklyReports,
+        theme: settings.theme,
+        language: settings.language,
+        timeFormat: settings.timeFormat,
+        startOfWeek: settings.startOfWeek,
+        moodReminderTime: settings.moodReminderTime,
+        journalReminderTime: settings.journalReminderTime,
+        dailyGoals: settings.dailyGoals,
+        twoFactorAuth: settings.twoFactorAuth,
+      };
+
+      await updateUserProfile(updateData);
+      setUnsavedChanges(false);
+      alert("Settings saved successfully!");
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      alert("Failed to save settings. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleReset = () => {
@@ -131,10 +249,14 @@ const Settings = ({ onLogout }) => {
           <input
             type="email"
             value={settings.email}
-            onChange={(e) => handleSettingChange("email", e.target.value)}
-            className="w-full p-3 border rounded-lg"
+            disabled
+            className="w-full p-3 border rounded-lg bg-gray-100 text-gray-600"
             style={{ borderColor: "var(--light-blue)" }}
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Email cannot be changed from here. Contact support for email
+            changes.
+          </p>
         </div>
 
         <div>
@@ -145,16 +267,50 @@ const Settings = ({ onLogout }) => {
             Profile Picture
           </label>
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-2xl">
-              {settings.profilePicture ? "🖼️" : "👤"}
+            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-2xl overflow-hidden">
+              {settings.profilePicture ? (
+                <img
+                  src={`http://localhost:3000${settings.profilePicture}`}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                "👤"
+              )}
             </div>
-            <button
-              className="px-4 py-2 rounded-lg text-white"
-              style={{ backgroundColor: "var(--primary-blue)" }}
-            >
-              Upload Photo
-            </button>
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                id="profilePictureInput"
+                accept="image/*"
+                onChange={handleProfilePictureUpload}
+                className="hidden"
+              />
+              <label
+                htmlFor="profilePictureInput"
+                className={`px-4 py-2 rounded-lg text-white cursor-pointer text-center ${
+                  saving ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                style={{ backgroundColor: "var(--primary-blue)" }}
+              >
+                {saving ? "Uploading..." : "Upload Photo"}
+              </label>
+              {settings.profilePicture && (
+                <button
+                  onClick={() =>
+                    setSettings((prev) => ({ ...prev, profilePicture: "" }))
+                  }
+                  className="px-4 py-2 rounded-lg border text-red-600 border-red-300 hover:bg-red-50"
+                  disabled={saving}
+                >
+                  Remove Photo
+                </button>
+              )}
+            </div>
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Recommended: Square image, max 5MB
+          </p>
         </div>
       </div>
     </div>
@@ -551,6 +707,24 @@ const Settings = ({ onLogout }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div
+              className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
+              style={{ borderColor: "var(--primary-blue)" }}
+            ></div>
+            <p style={{ color: "var(--text-gray)" }}>
+              Loading your settings...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
       <div className="mb-8">
@@ -636,10 +810,13 @@ const Settings = ({ onLogout }) => {
                   </button>
                   <button
                     onClick={handleSave}
-                    className="px-4 py-2 rounded-lg text-white"
+                    disabled={saving}
+                    className={`px-4 py-2 rounded-lg text-white ${
+                      saving ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                     style={{ backgroundColor: "var(--primary-blue)" }}
                   >
-                    Save Changes
+                    {saving ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </div>
